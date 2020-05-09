@@ -17,3 +17,5 @@ def register_handlers():
     Fuck.register(commands=['fuck'])
     Fuck.reg_callback(Fuck.accept_fuck, lambda c: c.data.startswith('fuck accept '))
     Fuck.reg_callback(Fuck.decline_fuck, lambda c: c.data.startswith('fuck decline '))
+
+    Suicide.register(commands=['suicide'])

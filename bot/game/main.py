@@ -77,7 +77,7 @@ class Game:
             females_in_marriage = []
             males_in_marriage = []
             users_in_marriage = User.objects(__raw__={f'partners.{chat}': {'$exists': True},
-                                             'age': {'$gte': 0, '$lte': 100}})
+                                             'age': {'$gte': 12, '$lte': 100}})
             print('users_in_marriage', [u.tg_id for u in users_in_marriage])
             for u in users_in_marriage:
                 if u.gender == 'females':
@@ -86,7 +86,7 @@ class Game:
                     males_in_marriage.append(u)
             females = []
             males = []
-            for user in User.objects(chats=chat, age__gte=0, age__lte=100):
+            for user in User.objects(chats=chat, age__gte=12, age__lte=100):
                 if user.gender == 'female' and user not in females_in_marriage:
                     females.append(user)
                 elif user.gender == 'male' and user not in males_in_marriage:
@@ -157,10 +157,9 @@ class Game:
                           (user.tg_id, user.name, second_user.tg_id, second_user.name)
 
             child = None
-            pregnancyallowpairs = ('female', 'male')
-            if (user.gender in pregnancyallowpairs
-                    and second_user.gender in pregnancyallowpairs
-                    and user.gender != second_user.gender):
+            female = user if user.gender == 'female' else second_user if second_user.gender == 'female' else None
+            male = user if user.gender == 'male' else second_user if second_user.gender == 'male' else None
+            if male and female and female.age >= 12:
 
                 childs_queue = await cls.get_childs_queue(chat=m.chat.id)
                 if childs_queue:

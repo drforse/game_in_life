@@ -16,4 +16,4 @@ bot = Bot(API_TOKEN, parse_mode='html')
 dp = Dispatcher(bot, storage=storage)
 
 
-game_speed = 50  # seconds == 1 age 21600
+game_speed = 10  # seconds == 1 age 21600
