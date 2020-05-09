@@ -8,6 +8,7 @@ import random
 import asyncio
 
 from models import *
+from game.types import Player
 
 
 class FuckForm(StatesGroup):
@@ -105,40 +106,48 @@ class Game:
         return result
 
     @staticmethod
-    async def process_died_user(bot: Bot, user: User):
-        childs_list = []
-        logging.info(f'process died user {user.tg_id}')
-        for chat in user.partners:
-            childs = user.childs.get(chat, [])
-            childs_list += childs
-            partner_user = User.objects(pk=user.partners[chat], age__gte=0, age__lte=100)
-            if not partner_user:
-                continue
-            partner_user = partner_user[0]
-            partner_user.update(__raw__={'$unset': {f'partners.{chat}': user.pk}})
-            country = Country.objects(chat_tg_id=int(chat))[0]
-            logging.info(f'process died user {user.tg_id}: notify partner {partner_user.tg_id}')
-            await bot.send_message(partner_user.tg_id, 'Ваш партнер в стране %s, %s - умер...' %
-                                   (country.name, user.name))
-        # logging.info(f'process died user {user.tg_id}: 1')
-        for child in childs_list:
-            child_user = User.objects(pk=child, age__gte=0, age__lte=100)
-            if not child_user:
-                continue
-            child_user = child_user[0]
-            logging.info(f'process died user {user.tg_id}: notify child {child_user.tg_id}')
-            await bot.send_message(child_user.tg_id, 'Ваш родитель, %s - умер...' % user.name)
-        # logging.info(f'process died user {user.tg_id}: 2')
-        for parent in user.parents:
-            if parent == "0":
-                continue
-            parent_user = User.objects(pk=parent, age__gte=0, age__lte=100)
-            if not parent_user:
-                continue
-            parent_user = parent_user[0]
-            logging.info(f'process died user {user.tg_id}: notify parent {parent_user.tg_id}')
-            await bot.send_message(parent_user.tg_id, 'Ваше чадо, %s - умерло...' % user.name)
-        # logging.info(f'process died user {user.tg_id}: 3')
+    async def process_died_user(bot: Bot, user: typing.Union[int, User]):
+        if isinstance(user, int):
+            player = Player(tg_id=user)
+        else:
+            player = Player(model=user)
+        output = await player.die()
+        for msg in output:
+            await bot.send_message(msg, output[msg])
+
+        # childs_list = []
+        # logging.info(f'process died user {user.tg_id}')
+        # for chat in user.partners:
+        #     childs = user.childs.get(chat, [])
+        #     childs_list += childs
+        #     partner_user = User.objects(pk=user.partners[chat], age__gte=0, age__lte=100)
+        #     if not partner_user:
+        #         continue
+        #     partner_user = partner_user[0]
+        #     partner_user.update(__raw__={'$unset': {f'partners.{chat}': user.pk}})
+        #     country = Country.objects(chat_tg_id=int(chat))[0]
+        #     logging.info(f'process died user {user.tg_id}: notify partner {partner_user.tg_id}')
+        #     await bot.send_message(partner_user.tg_id, 'Ваш партнер в стране %s, %s - умер...' %
+        #                            (country.name, user.name))
+        # # logging.info(f'process died user {user.tg_id}: 1')
+        # for child in childs_list:
+        #     child_user = User.objects(pk=child, age__gte=0, age__lte=100)
+        #     if not child_user:
+        #         continue
+        #     child_user = child_user[0]
+        #     logging.info(f'process died user {user.tg_id}: notify child {child_user.tg_id}')
+        #     await bot.send_message(child_user.tg_id, 'Ваш родитель, %s - умер...' % user.name)
+        # # logging.info(f'process died user {user.tg_id}: 2')
+        # for parent in user.parents:
+        #     if parent == "0":
+        #         continue
+        #     parent_user = User.objects(pk=parent, age__gte=0, age__lte=100)
+        #     if not parent_user:
+        #         continue
+        #     parent_user = parent_user[0]
+        #     logging.info(f'process died user {user.tg_id}: notify parent {parent_user.tg_id}')
+        #     await bot.send_message(parent_user.tg_id, 'Ваше чадо, %s - умерло...' % user.name)
+        # # logging.info(f'process died user {user.tg_id}: 3')
 
     @classmethod
     async def process_fuck(cls, dp: Dispatcher, m: Message, user: User, second_user: User):

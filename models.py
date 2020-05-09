@@ -1,11 +1,23 @@
+from __future__ import annotations
+
 from mongoengine import *
 import datetime
 import logging
+import typing
 
 from config import game_speed
 
 
-class User(Document):
+class MyDocument:
+
+    @classmethod
+    def get(cls, **kwargs) -> typing.Union[User, None]:
+        queryset_ = cls.objects(**kwargs)
+        if queryset_:
+            return queryset_[0]
+
+
+class User(Document, MyDocument):
     tg_id = IntField(required=True)
     name = StringField(required=True, max_length=50)
     gender = StringField(required=True, max_length=11)  # male, female, transgender
@@ -18,7 +30,7 @@ class User(Document):
     def update_age(self):
         logging.info(f'update age of user {self.tg_id}')
         if self.age < 0 or self.age > 100:
-            logging.info(f'update age of user {self.tg_id}: 0 > age {age} > 100')
+            logging.info(f'update age of user {self.tg_id}: 0 > self.age {self.age} > 100')
             return
         creation_date = self.pk.generation_time
         now = datetime.datetime.now(tz=creation_date.tzinfo)
@@ -39,8 +51,16 @@ class User(Document):
         self.update(__raw__={'$push': {f'childs.{chat}': child}})
         self.save()
 
+    def set_partner(self, chat, partner):
+        self.update(__raw__={'$set': {f'partners.{chat}': partner}})
+        self.save()
 
-class Country(Document):
+    def unset_partner(self, chat):
+        self.update(__raw__={'$unset': {f'partners.{chat}': {'$exists': True}}})
+        self.save()
+
+
+class Country(Document, MyDocument):
     chat_tg_id = IntField(required=True)
     name = StringField(required=True, max_length=50)
 

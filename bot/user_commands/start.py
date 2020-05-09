@@ -38,11 +38,11 @@ class Start(Command):
 
     @classmethod
     async def execute_in_private(cls, m: Message):
-        user = User.objects(tg_id=m.from_user.id, age__gte=-1, age__lte=100)
+        user = User.get(tg_id=m.from_user.id, age__gte=-1, age__lte=100)
         if not user:
             await Game.process_new_user(m)
             return
-        user = user[0]
+
         if not user.parents:
             await m.answer('Ждите своего рождения')
             return
