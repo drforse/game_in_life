@@ -12,8 +12,8 @@ API_TOKEN = os.environ['daddy_token']
 DB_URL = os.environ['game_in_life_db_url']
 
 storage = MemoryStorage()
-bot = Bot(API_TOKEN)
+bot = Bot(API_TOKEN, parse_mode='html')
 dp = Dispatcher(bot, storage=storage)
 
 
-game_speed = 6  # hours == 1 age
+game_speed = 50  # seconds == 1 age 21600

@@ -38,13 +38,19 @@ class Start(Command):
 
     @classmethod
     async def execute_in_private(cls, m: Message):
-        user = User.objects(tg_id=m.from_user.id, age__gte=0, age__lte=100)
+        user = User.objects(tg_id=m.from_user.id, age__gte=-1, age__lte=100)
         if not user:
             await Game.process_new_user(m)
             return
         user = user[0]
-        await m.answer('Привет, %s' % user.name)
-        await Game.get_available_pairs(user)
+        if not user.parents:
+            await m.answer('Ждите своего рождения')
+            return
+        parent = User.objects(id=user.parents[0])[0].name if user.parents[0] != '0' else 'Ева'
+        second_parent = User.objects(id=user.parents[1])[0].name if user.parents[1] != '0' else 'Адам'
+        await m.answer('Имя: %s\nПол: %s\nВозраст: %s\nРодители: %s, %s\n' %
+                       (user.name, user.gender, user.age, parent, second_parent))
+        # await Game.get_available_pairs(user)
 
     @classmethod
     async def set_country_name(cls, m: Message, state: FSMContext):
@@ -58,6 +64,6 @@ class Start(Command):
             await m.answer('Название должно быть не длиннее пятидесяти символов.')
             return
 
-        Country(chat_tg_id=m.chat.id, name=m.text).save()
-        await m.answer('Страна с названием %s успешно основана.' % m.text)
+        Country(chat_tg_id=m.chat.id, name=m.html_text).save()
+        await m.answer('Страна с названием %s успешно основана.' % m.html_text)
         await state.finish()

@@ -12,21 +12,26 @@ class User(Document):
     chats = ListField(IntField())  # [chat_id]
     partners = DictField(default={})  # {chat_id: partner_id}
     childs = DictField(default={})  # {chat_id: List[child_id]}
-    parents = ListField(default={})
+    parents = ListField(default=[])
 
     def update_age(self):
         if self.age < 0 or self.age > 100:
             return
-        creation_date = self.pk.generation_date
-        now = datetime.datetime.now()
+        creation_date = self.pk.generation_time
+        now = datetime.datetime.now(tz=creation_date.tzinfo)
         delta = now - creation_date
-        age = int(delta.hour / game_speed)
-        if self.age == age:
+        age = int(delta.total_seconds() / game_speed)
+        age = age if age < 101 else 101
+        if self.age >= age:
             return
-        self.age = age if age <= 100 else 101
+        self.age = age
         self.save()
         if self.age > 100:
             return 'died_now'
+
+    def push_child(self, chat, child):
+        self.update(__raw__={'$push': {f'childs.{chat}': child}})
+        self.save()
 
 
 class Country(Document):

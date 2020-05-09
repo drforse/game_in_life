@@ -1,5 +1,6 @@
-from config import *
 from aiogram.types import Message
+
+from config import *
 
 
 class Command:
@@ -16,3 +17,8 @@ class Command:
         callback = callback or cls.execute
         cls.dp.register_message_handler(callback=callback, *custom_filters, commands=commands, regexp=regexp,
                                         content_types=content_types, state=state, run_task=run_task, **kwargs)
+
+    @classmethod
+    def reg_callback(cls, callback=None, *custom_filters, state=None, run_task=None, **kwargs):
+        callback = callback or cls.execute
+        cls.dp.register_callback_query_handler(callback, *custom_filters, state=state, run_task=run_task, **kwargs)

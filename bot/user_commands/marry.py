@@ -22,13 +22,18 @@ class Marry(Command):
 
         user = user[0]
         second_user = second_user[0]
+        if user.tg_id == second_user.tg_id:
+            await m.answer('Sry, but you can\'t marry yourself')
+            return
+
         if user.age < 16 or second_user.age < 16:
             await m.answer('Вступать в брак можно только с 16-ти лет, до 16-ти можно только встречаться - /date')
             return
 
         kb = InlineKeyboardMarkup()
-        accept = InlineKeyboardButton('Принять', f'marriage accept {m.from_user.id} {second_user.tg_id}')
-        decline = InlineKeyboardButton('Отклонить', f'marriage decline {m.from_user.id} {second_user.tg_id}')
+        accept = InlineKeyboardButton('Принять', callback_data=f'marriage accept {m.from_user.id} {second_user.tg_id}')
+        decline = InlineKeyboardButton('Отклонить',
+                                       callback_data=f'marriage decline {m.from_user.id} {second_user.tg_id}')
         kb.add(accept, decline)
 
         await m.answer('<a href="tg://user?id=%d">%s</a>, <a href="tg://user?id=%d">%s</a> предлагает тебе свои руку '
@@ -51,8 +56,8 @@ class Marry(Command):
             await c.answer('%s уже в браке' % user.name)
             await c.message.delete()
             return
-        user.update(__raw__={'$set': {f'set__partners__{c.message.chat.id}': second_user}})
-        second_user.update(__raw__={'$set': {f'set__partners__{c.message.chat.id}': user}})
+        user.update(__raw__={'$set': {f'partners.{c.message.chat.id}': second_user.pk}})
+        second_user.update(__raw__={'$set': {f'partners.{c.message.chat.id}': user.pk}})
         await c.message.delete()
         await c.message.answer('Поздавляем <a href="tg://user?id=%d">%s</a> и <a href="tg://user?id=%d">%s</a> со '
                                'свадьбой' % (user.tg_id, user.name, second_user.tg_id, second_user.name))
