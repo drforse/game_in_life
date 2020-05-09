@@ -15,3 +15,5 @@ def register_handlers():
     Marry.reg_callback(Marry.decline_marriage, lambda c: c.data.startswith('marriage decline '))
 
     Fuck.register(commands=['fuck'])
+    Fuck.reg_callback(Fuck.accept_fuck, lambda c: c.data.startswith('fuck accept '))
+    Fuck.reg_callback(Fuck.decline_fuck, lambda c: c.data.startswith('fuck decline '))

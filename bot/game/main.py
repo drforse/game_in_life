@@ -2,7 +2,7 @@ from aiogram.dispatcher.filters.state import StatesGroup, State
 from aiogram.dispatcher import FSMContext
 from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
 from aiogram import Bot, Dispatcher
-from pymongo.collection import ObjectId
+import logging
 import typing
 import random
 import asyncio
@@ -55,14 +55,14 @@ class Game:
         old_user = User.objects(tg_id=m.from_user.id)
         chats = old_user[0].chats if old_user else []
 
-        user = User(tg_id=m.from_user.id, name=name, gender=gender_reference[gender], chats=chats).save()
-        text = 'Создан игрок с данными:\nИмя: %s\nПол: %s\nВозраст: %d\n' % (user.name, user.gender, user.age)
-        if not await cls.get_available_pairs(user):
+        user = User(tg_id=m.from_user.id, name=name, age=-1, gender=gender_reference[gender], chats=chats).save()
+        text = 'Создан игрок с данными:\nИмя: %s\nПол: %s\nВозраст: 0\n' % (user.name, user.gender)
+        if not await cls.get_users_availiable_for_children(user):
             text += 'Родители: Ева, Адам\n'
             user.parents = ['0', '0']
+            user.age = 0
             user.save()
         else:
-            user.age = -1
             user.save()
             text += ('\nЖдите своего рождения. Чтобы родиться, Вы должны написать /start хотя бы в одной из групп с '
                      'ботом (чем больше групп, тем выше скорость рождения).')
@@ -70,42 +70,75 @@ class Game:
         await state.finish()
 
     @staticmethod
-    async def get_available_pairs(user: User):
+    async def get_users_availiable_for_children(user: User):
         chats = user.chats
-        pairs = []
+        result = []
         for chat in chats:
-            pairs += User.objects(__raw__={f'partners.{chat}': {'$exists': True},
-                                           'age': {'$gte': 0, '$lte': 100}})
-        return pairs
+            females_in_marriage = []
+            males_in_marriage = []
+            users_in_marriage = User.objects(__raw__={f'partners.{chat}': {'$exists': True},
+                                             'age': {'$gte': 0, '$lte': 100}})
+            print('users_in_marriage', [u.tg_id for u in users_in_marriage])
+            for u in users_in_marriage:
+                if u.gender == 'females':
+                    females_in_marriage.append(u)
+                elif u.gender == 'males':
+                    males_in_marriage.append(u)
+            females = []
+            males = []
+            for user in User.objects(chats=chat, age__gte=0, age__lte=100):
+                if user.gender == 'female' and user not in females_in_marriage:
+                    females.append(user)
+                elif user.gender == 'male' and user not in males_in_marriage:
+                    males.append(user)
+
+            result += users_in_marriage  # + users_dating
+
+            if len(females) > len(males):
+                females = females[:len(males)]
+            else:
+                males = males[:len(females)]
+
+            result += females + males
+
+        print('result', [u.tg_id for u in result])
+        return result
 
     @staticmethod
     async def process_died_user(bot: Bot, user: User):
         childs_list = []
+        logging.info(f'process died user {user.tg_id}')
         for chat in user.partners:
-            childs = user.childs.get(chat)
-            childs_list.append(childs)
+            childs = user.childs.get(chat, [])
+            childs_list += childs
             partner_user = User.objects(pk=user.partners[chat], age__gte=0, age__lte=100)
             if not partner_user:
                 continue
             partner_user = partner_user[0]
             partner_user.update(__raw__={'$unset': {f'partners.{chat}': user.pk}})
-            country = Country.objects(chat_tg_id=chat)
+            country = Country.objects(chat_tg_id=int(chat))[0]
+            logging.info(f'process died user {user.tg_id}: notify partner {partner_user.tg_id}')
             await bot.send_message(partner_user.tg_id, 'Ваш партнер в стране %s, %s - умер...' %
                                    (country.name, user.name))
-
+        # logging.info(f'process died user {user.tg_id}: 1')
         for child in childs_list:
             child_user = User.objects(pk=child, age__gte=0, age__lte=100)
             if not child_user:
                 continue
             child_user = child_user[0]
+            logging.info(f'process died user {user.tg_id}: notify child {child_user.tg_id}')
             await bot.send_message(child_user.tg_id, 'Ваш родитель, %s - умер...' % user.name)
-
+        # logging.info(f'process died user {user.tg_id}: 2')
         for parent in user.parents:
+            if parent == "0":
+                continue
             parent_user = User.objects(pk=parent, age__gte=0, age__lte=100)
             if not parent_user:
                 continue
             parent_user = parent_user[0]
+            logging.info(f'process died user {user.tg_id}: notify parent {parent_user.tg_id}')
             await bot.send_message(parent_user.tg_id, 'Ваше чадо, %s - умерло...' % user.name)
+        # logging.info(f'process died user {user.tg_id}: 3')
 
     @classmethod
     async def process_fuck(cls, dp: Dispatcher, m: Message, user: User, second_user: User):
@@ -145,6 +178,8 @@ class Game:
         await m.answer(start_message)
         await asyncio.sleep(random.randint(10, 120))
         await m.answer(end_message)
+        for u in [user, second_user]:
+            await dp.current_state(chat=m.chat.id, user=u.tg_id).finish()
 
     @staticmethod
     async def born_child(mother: User, father: User, child: User, chat: typing.Union[Country, int]):

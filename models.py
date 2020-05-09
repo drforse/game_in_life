@@ -1,5 +1,6 @@
 from mongoengine import *
 import datetime
+import logging
 
 from config import game_speed
 
@@ -15,7 +16,9 @@ class User(Document):
     parents = ListField(default=[])
 
     def update_age(self):
+        logging.info(f'update age of user {self.tg_id}')
         if self.age < 0 or self.age > 100:
+            logging.info(f'update age of user {self.tg_id}: 0 > age {age} > 100')
             return
         creation_date = self.pk.generation_time
         now = datetime.datetime.now(tz=creation_date.tzinfo)
@@ -23,10 +26,13 @@ class User(Document):
         age = int(delta.total_seconds() / game_speed)
         age = age if age < 101 else 101
         if self.age >= age:
+            logging.info(f'update age of user {self.tg_id}: self.age {self.age} >= age {age}')
             return
         self.age = age
         self.save()
+        logging.info(f'update age of user {self.tg_id}: {self.age} is new age!')
         if self.age > 100:
+            logging.info(f'update age of user {self.tg_id}: died now')
             return 'died_now'
 
     def push_child(self, chat, child):
@@ -37,3 +43,7 @@ class User(Document):
 class Country(Document):
     chat_tg_id = IntField(required=True)
     name = StringField(required=True, max_length=50)
+
+
+__all__ = ['User',
+           'Country']
