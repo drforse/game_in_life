@@ -150,12 +150,12 @@ class Game:
     async def born_child(mother: User, father: User, child: User, chat: typing.Union[Country, int]):
         if isinstance(chat, Country):
             chat = Country.chat_tg_id
+        child.delete()
+        child = User(tg_id=child.tg_id, name=child.name, gender=child.gender, age=0, chats=child.chats,
+                     parents=[mother.pk, father.pk])
+        child.save()
         mother.push_child(chat, child.pk)
         father.push_child(chat, child.pk)
-        child.parents = [mother.pk, father.pk]
-        child.age = 0
-        child.pk = ObjectId()
-        child.save()
 
     @staticmethod
     async def get_childs_queue(chat: typing.Union[Country, int]) -> typing.Optional[typing.Iterable[User]]:
