@@ -115,40 +115,6 @@ class Game:
         for msg in output:
             await bot.send_message(msg, output[msg])
 
-        # childs_list = []
-        # logging.info(f'process died user {user.tg_id}')
-        # for chat in user.partners:
-        #     childs = user.childs.get(chat, [])
-        #     childs_list += childs
-        #     partner_user = User.objects(pk=user.partners[chat], age__gte=0, age__lte=100)
-        #     if not partner_user:
-        #         continue
-        #     partner_user = partner_user[0]
-        #     partner_user.update(__raw__={'$unset': {f'partners.{chat}': user.pk}})
-        #     country = Country.objects(chat_tg_id=int(chat))[0]
-        #     logging.info(f'process died user {user.tg_id}: notify partner {partner_user.tg_id}')
-        #     await bot.send_message(partner_user.tg_id, 'Ваш партнер в стране %s, %s - умер...' %
-        #                            (country.name, user.name))
-        # # logging.info(f'process died user {user.tg_id}: 1')
-        # for child in childs_list:
-        #     child_user = User.objects(pk=child, age__gte=0, age__lte=100)
-        #     if not child_user:
-        #         continue
-        #     child_user = child_user[0]
-        #     logging.info(f'process died user {user.tg_id}: notify child {child_user.tg_id}')
-        #     await bot.send_message(child_user.tg_id, 'Ваш родитель, %s - умер...' % user.name)
-        # # logging.info(f'process died user {user.tg_id}: 2')
-        # for parent in user.parents:
-        #     if parent == "0":
-        #         continue
-        #     parent_user = User.objects(pk=parent, age__gte=0, age__lte=100)
-        #     if not parent_user:
-        #         continue
-        #     parent_user = parent_user[0]
-        #     logging.info(f'process died user {user.tg_id}: notify parent {parent_user.tg_id}')
-        #     await bot.send_message(parent_user.tg_id, 'Ваше чадо, %s - умерло...' % user.name)
-        # # logging.info(f'process died user {user.tg_id}: 3')
-
     @classmethod
     async def process_fuck(cls, dp: Dispatcher, m: Message, user: User, second_user: User):
         if user.tg_id == second_user.tg_id:
@@ -190,9 +156,9 @@ class Game:
             await dp.current_state(chat=m.chat.id, user=u.tg_id).finish()
 
     @staticmethod
-    async def born_child(mother: User, father: User, child: User, chat: typing.Union[Country, int]):
-        if isinstance(chat, Country):
-            chat = Country.chat_tg_id
+    async def born_child(mother: User, father: User, child: User, chat: typing.Union[Group, int]):
+        if isinstance(chat, Group):
+            chat = Group.chat_tg_id
         child.delete()
         child = User(tg_id=child.tg_id, name=child.name, gender=child.gender, age=0, chats=child.chats,
                      parents=[mother.pk, father.pk])
@@ -201,9 +167,9 @@ class Game:
         father.push_child(chat, child.pk)
 
     @staticmethod
-    async def get_childs_queue(chat: typing.Union[Country, int]) -> typing.Optional[typing.Iterable[User]]:
-        if isinstance(chat, Country):
-            chat = Country.chat_tg_id
+    async def get_childs_queue(chat: typing.Union[Group, int]) -> typing.Optional[typing.Iterable[User]]:
+        if isinstance(chat, Group):
+            chat = chat.chat_tg_id
         return User.objects(age=-1, chats=chat)
 
 

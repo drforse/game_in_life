@@ -19,16 +19,21 @@ class MyDocument:
 
 class User(Document, MyDocument):
     tg_id = IntField(required=True)
-    name = StringField(required=True, max_length=50)
-    gender = StringField(required=True, max_length=11)  # male, female, transgender
+    name = StringField(required=True)
+    gender = StringField(required=True)  # male, female, transgender
     age = IntField(max_value=101, min_value=-1, default=0)
     chats = ListField(IntField())  # [chat_id]
     partners = DictField(default={})  # {chat_id: partner_id}
     childs = DictField(default={})  # {chat_id: List[child_id]}
     parents = ListField(default=[])
 
-    def update_age(self):
+    def update_age(self, age: int = None):
         logging.info(f'update age of user {self.tg_id}')
+        if age:
+            logging.info(f'update age of user {self.tg_id}: exact age specified, setting age {age}')
+            self.age = age
+            self.save()
+            return
         if self.age < 0 or self.age > 100:
             logging.info(f'update age of user {self.tg_id}: 0 > self.age {self.age} > 100')
             return
@@ -60,10 +65,10 @@ class User(Document, MyDocument):
         self.save()
 
 
-class Country(Document, MyDocument):
+class Group(Document, MyDocument):
     chat_tg_id = IntField(required=True)
-    name = StringField(required=True, max_length=50)
+    name = StringField(required=True)
 
 
 __all__ = ['User',
-           'Country']
+           'Group']

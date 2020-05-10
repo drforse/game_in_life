@@ -4,6 +4,7 @@ from aiogram.dispatcher import FSMContext
 
 from ..core import Command
 from ..game import Game
+from game.types import Player, Country
 from models import *
 
 
@@ -19,38 +20,36 @@ class Start(Command):
         if m.chat.type == 'private':
             await cls.execute_in_private(m)
             return
-        country = Country.objects(chat_tg_id=m.chat.id)
-        if not country:
+        country = Country(chat_tg_id=m.chat.id)
+        if not country.exists:
             await m.answer('Привет. Придумайте название своей стране и напишите реплаем на это сообщение '
                            '(пока не придумаете, я тут писать не буду)')
             await cls.states_group.set_name.set()
             return
 
-        country = country[0]
-        user = User.objects(tg_id=m.from_user.id, age__gte=0, age__lte=100)
+        user = User.get(tg_id=m.from_user.id, age__gte=0, age__lte=100)
         if not user:
             await m.answer('Привет, незнакомец. Ты в стране %s. Напиши мне в лс, чтобы играть.' % country.name)
             return
-        user = user[0]
         if m.chat.id not in user.chats:
             user.update(push__chats=m.chat.id)
         await m.answer('Привет, %s. Ты находишься в стране %s' % (user.name, country.name))
 
     @classmethod
     async def execute_in_private(cls, m: Message):
-        user = User.get(tg_id=m.from_user.id, age__gte=-1, age__lte=100)
-        if not user:
+        player = Player(tg_id=m.from_user.id)
+        if not player.exists:
             await Game.process_new_user(m)
             return
 
-        if not user.parents:
+        if not player.parents:
             await m.answer('Ждите своего рождения')
             return
-        parent = User.objects(id=user.parents[0])[0].name if user.parents[0] != '0' else 'Ева'
-        second_parent = User.objects(id=user.parents[1])[0].name if user.parents[1] != '0' else 'Адам'
+
+        parent = Player(model_id=player.parents[0]).name if player.parents[0] != '0' else 'Ева'
+        second_parent = Player(model_id=player.parents[1]).name if player.parents[1] != '0' else 'Адам'
         await m.answer('Имя: %s\nПол: %s\nВозраст: %s\nРодители: %s, %s\n' %
-                       (user.name, user.gender, user.age, parent, second_parent))
-        # await Game.get_available_pairs(user)
+                       (player.name, player.gender, player.age, parent, second_parent))
 
     @classmethod
     async def set_country_name(cls, m: Message, state: FSMContext):
@@ -64,6 +63,6 @@ class Start(Command):
             await m.answer('Название должно быть не длиннее пятидесяти символов.')
             return
 
-        Country(chat_tg_id=m.chat.id, name=m.html_text).save()
-        await m.answer('Страна с названием %s успешно основана.' % m.html_text)
+        country = await Country(chat_tg_id=m.chat.id).create(name=m.html_text)
+        await m.answer('Страна с названием %s успешно основана.' % country.name)
         await state.finish()

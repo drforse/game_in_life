@@ -20,3 +20,7 @@ if __name__ == '__main__':
 
 # asyncio.gather(dp.skip_updates(), dp.start_polling(), Queue.run())
 # asyncio.get_event_loop().run_forever()
+
+# TODO:
+# [] divorce
+# [] fuck
