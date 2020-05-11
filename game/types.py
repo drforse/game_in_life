@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import logging
+
+import typing
 from pymongo.collection import ObjectId
 
 from models import *
@@ -45,6 +47,9 @@ class Player:
         self.partners = model.partners
         self.childs = model.childs
         self.exists = True
+
+    async def join_chat(self, chat_tg_id):
+        self.model.update(push__chats=chat_tg_id)
 
     async def die(self, update_from_db=False):
         if update_from_db:
@@ -105,6 +110,23 @@ class Player:
         partner.model.update(__raw__={'$set': {f'partners.{chat_tg_id}': self.id}})
         return ('Поздавляем <a href="tg://user?id=%d">%s</a> и <a href="tg://user?id=%d">%s</a> со свадьбой' %
                 (self.tg_id, self.name, partner.tg_id, partner.name))
+
+    async def divorce(self, chat_tg_id: int, partner: typing.Union[User, Player, int, ObjectId]):
+        partner_arg_type = type(partner)
+
+        if partner_arg_type == int:
+            partner_model = User.get(tg_id=partner, age__gte=0, age__lte=100)
+        elif partner_arg_type == Player:
+            partner_model = partner.model
+        elif partner_arg_type == ObjectId:
+            partner_model = User.get(id=partner, age__gte=0, age__lte=100)
+        elif partner_arg_type == User:
+            partner_model = partner
+        else:
+            raise TypeError('partner arg type must be User, Player, int or ObjectId')
+
+        self.model.unset_partner(chat_tg_id)
+        partner_model.unset_partner(chat_tg_id)
 
 
 class Country:

@@ -6,6 +6,8 @@ from config import *
 class Command:
     dp = dp
     bot = bot
+    needs_auth = True
+    needs_reply_auth = True
 
     @staticmethod
     async def execute(m: Message):

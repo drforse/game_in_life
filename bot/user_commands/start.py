@@ -13,6 +13,8 @@ class CreateCountryForm(StatesGroup):
 
 
 class Start(Command):
+    needs_auth = False
+    needs_reply_auth = False
     states_group = CreateCountryForm
 
     @classmethod
@@ -27,13 +29,13 @@ class Start(Command):
             await cls.states_group.set_name.set()
             return
 
-        user = User.get(tg_id=m.from_user.id, age__gte=0, age__lte=100)
-        if not user:
+        player = Player(tg_id=m.from_user.id)
+        if not player.exists:
             await m.answer('Привет, незнакомец. Ты в стране %s. Напиши мне в лс, чтобы играть.' % country.name)
             return
-        if m.chat.id not in user.chats:
-            user.update(push__chats=m.chat.id)
-        await m.answer('Привет, %s. Ты находишься в стране %s' % (user.name, country.name))
+        if m.chat.id not in player.chats:
+            await player.join_chat(m.chat.id)
+        await m.answer('Привет, %s. Ты находишься в стране %s' % (player.name, country.name))
 
     @classmethod
     async def execute_in_private(cls, m: Message):

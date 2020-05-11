@@ -1,12 +1,12 @@
 from aiogram.types import Message
 
 from ..core import Command
-from ..game import Game
 from game.types import Player
-from models import *
 
 
 class Suicide(Command):
+    needs_auth = False
+    needs_reply_auth = False
 
     @staticmethod
     async def execute(m: Message):

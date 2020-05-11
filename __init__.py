@@ -5,13 +5,14 @@ import multiprocessing
 
 from config import dp, DB_URL
 from bot.register_handlers import register_handlers
-from bot.aiogram_middlware import CheckAgeMiddlware
+from bot.aiogram_middlwares import *
 from users_queue import Queue
 
 
 connect(host=DB_URL)
 register_handlers()
 dp.middleware.setup(CheckAgeMiddlware())
+dp.middleware.setup(AuthMiddlware())
 
 if __name__ == '__main__':
     multiprocessing.Process(target=Queue.run).start()
@@ -22,5 +23,5 @@ if __name__ == '__main__':
 # asyncio.get_event_loop().run_forever()
 
 # TODO:
-# [] divorce
-# [] fuck
+
+# [] fuck processing

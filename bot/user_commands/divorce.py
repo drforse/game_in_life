@@ -1,24 +1,22 @@
 from aiogram.types import Message
 
 from ..core import Command
-from models import *
+from game.types import Player
 
 
 class Divorce(Command):
+    needs_reply_auth = False
 
     @staticmethod
     async def execute(m: Message):
-        user = User.get(tg_id=m.from_user.id, age__gte=0, age__lte=100)
-        if not user:
-            await m.answer('Ты не жив, напиши /start мне в лс, чтобы родиться')
-            return
+        player = Player(tg_id=m.from_user.id)
 
-        partner = user.partners.get(str(m.chat.id))
+        partner = player.partners.get(str(m.chat.id))
         if not partner:
             await m.answer('В этой стране ты не в браке')
             return
-        user.unset_partner(m.chat.id)
-        second_user = User.objects(pk=partner)[0]
-        second_user.unset_partner(m.chat.id)
+
+        second_player = Player(model_id=partner)
+        await player.divorce(m.chat.id, second_player)
         await m.answer('<a href="tg://user?id=%s">%s</a> и <a href="tg://user?id=%s">%s</a> больше не вместе' %
-                       (user.tg_id, user.name, second_user.tg_id, second_user.name))
+                       (player.tg_id, player.name, second_player.tg_id, second_player.name))

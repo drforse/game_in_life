@@ -53,8 +53,8 @@ class Game:
             name = dt['name']
         gender_reference = {'мужской': 'male', 'женский': 'female', 'трансгендер': 'transgender'}
 
-        old_user = User.objects(tg_id=m.from_user.id)
-        chats = old_user[0].chats if old_user else []
+        old_user = User.get(tg_id=m.from_user.id)
+        chats = old_user.chats if old_user else []
 
         user = User(tg_id=m.from_user.id, name=name, age=-1, gender=gender_reference[gender], chats=chats).save()
         text = 'Создан игрок с данными:\nИмя: %s\nПол: %s\nВозраст: 0\n' % (user.name, user.gender)
@@ -116,7 +116,7 @@ class Game:
             await bot.send_message(msg, output[msg])
 
     @classmethod
-    async def process_fuck(cls, dp: Dispatcher, m: Message, user: User, second_user: User):
+    async def process_fuck(cls, dp: Dispatcher, m: Message, user: Player, second_user: Player):
         if user.tg_id == second_user.tg_id:
             start_message = '<a href="tg://user?id=%d">%s</a> дрочит.' % (user.tg_id, user.name)
             current_state = dp.current_state(chat=m.chat.id, user=user.tg_id)
@@ -156,15 +156,15 @@ class Game:
             await dp.current_state(chat=m.chat.id, user=u.tg_id).finish()
 
     @staticmethod
-    async def born_child(mother: User, father: User, child: User, chat: typing.Union[Group, int]):
+    async def born_child(mother: Player, father: Player, child: User, chat: typing.Union[Group, int]):
         if isinstance(chat, Group):
             chat = Group.chat_tg_id
         child.delete()
         child = User(tg_id=child.tg_id, name=child.name, gender=child.gender, age=0, chats=child.chats,
                      parents=[mother.pk, father.pk])
         child.save()
-        mother.push_child(chat, child.pk)
-        father.push_child(chat, child.pk)
+        mother.model.push_child(chat, child.pk)
+        father.model.push_child(chat, child.pk)
 
     @staticmethod
     async def get_childs_queue(chat: typing.Union[Group, int]) -> typing.Optional[typing.Iterable[User]]:
