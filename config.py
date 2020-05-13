@@ -8,7 +8,7 @@ import os
 logging.basicConfig(level=logging.INFO)
 
 
-API_TOKEN = os.environ['daddy_token']
+API_TOKEN = os.environ['bot_token']
 DB_URL = os.environ['game_in_life_db_url']
 
 storage = MemoryStorage()
