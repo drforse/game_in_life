@@ -11,7 +11,7 @@ from users_queue import Queue
 
 connect(host=DB_URL)
 register_handlers()
-dp.middleware.setup(CheckAgeMiddlware())
+# dp.middleware.setup(CheckAgeMiddlware())
 dp.middleware.setup(AuthMiddlware())
 
 if __name__ == '__main__':

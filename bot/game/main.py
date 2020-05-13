@@ -11,14 +11,14 @@ from models import *
 from game.types import Player
 
 
-class FuckForm(StatesGroup):
-    fucking = State()
-    masturbate = State()
-
-
 class CreatePlayerForm(StatesGroup):
     set_name = State()
     set_gender = State()
+
+
+class FuckForm(StatesGroup):
+    fucking = State()
+    masturbate = State()
 
 
 class Game:
@@ -26,6 +26,11 @@ class Game:
     @staticmethod
     async def process_new_user(m: Message):
         await m.answer('Привет. Мы с тобой незнакомы. Как тебя зовут?')
+        await CreatePlayerForm.set_name.set()
+
+    @staticmethod
+    async def process_rebornig_user(m: Message):
+        await m.answer('Привет. Ну что, по новой? Как тебя зовут?')
         await CreatePlayerForm.set_name.set()
 
     @staticmethod
@@ -56,7 +61,10 @@ class Game:
         old_user = User.get(tg_id=m.from_user.id)
         chats = old_user.chats if old_user else []
 
-        user = User(tg_id=m.from_user.id, name=name, age=-1, gender=gender_reference[gender], chats=chats).save()
+        user = User(tg_id=m.from_user.id, name=name, age=-1, gender=gender_reference[gender], chats=chats)
+        user.save()
+        if old_user:
+            old_user.delete()
         text = 'Создан игрок с данными:\nИмя: %s\nПол: %s\nВозраст: 0\n' % (user.name, user.gender)
         if not await cls.get_users_availiable_for_children(user):
             text += 'Родители: Ева, Адам\n'
@@ -77,13 +85,12 @@ class Game:
         for chat in chats:
             females_in_marriage = []
             males_in_marriage = []
-            users_in_marriage = User.objects(__raw__={f'partners.{chat}': {'$exists': True},
-                                             'age': {'$gte': 12, '$lte': 100}})
+            users_in_marriage = User.objects(__raw__={f'partners.{chat}': {'$exists': True}})
             print('users_in_marriage', [u.tg_id for u in users_in_marriage])
             for u in users_in_marriage:
-                if u.gender == 'females':
+                if u.gender == 'female':
                     females_in_marriage.append(u)
-                elif u.gender == 'males':
+                elif u.gender == 'male':
                     males_in_marriage.append(u)
             females = []
             males = []
@@ -106,71 +113,29 @@ class Game:
         return result
 
     @staticmethod
-    async def process_died_user(bot: Bot, user: typing.Union[int, User]):
-        if isinstance(user, int):
-            player = Player(tg_id=user)
-        else:
-            player = Player(model=user)
+    async def process_died_user(bot: Bot, player: typing.Union[int, User, Player]):
+        if isinstance(player, int):
+            player = Player(tg_id=player)
+        elif isinstance(player, User):
+            player = Player(model=player)
         output = await player.die()
         for msg in output:
             await bot.send_message(msg, output[msg])
 
     @classmethod
-    async def process_fuck(cls, dp: Dispatcher, m: Message, user: Player, second_user: Player):
-        if user.tg_id == second_user.tg_id:
-            start_message = '<a href="tg://user?id=%d">%s</a> дрочит.' % (user.tg_id, user.name)
-            current_state = dp.current_state(chat=m.chat.id, user=user.tg_id)
-            await current_state.set_state(FuckForm.masturbate)
-            end_message = '<a href="tg://user?id=%d">%s</a> кончил.' % (user.tg_id, user.name)
-        else:
-            start_message = '<a href="tg://user?id=%d">%s</a> и <a href="tg://user?id=%d">%s</a> пошли трахаться :3' %\
-                            (user.tg_id, user.name, second_user.tg_id, second_user.name)
-            for u in [user, second_user]:
-                current_state = dp.current_state(chat=m.chat.id, user=u.tg_id)
-                await current_state.set_state(FuckForm.fucking)
-            end_message = '<a href="tg://user?id=%d">%s</a> и <a href="tg://user?id=%d">%s</a> закончили трахаться' % \
-                          (user.tg_id, user.name, second_user.tg_id, second_user.name)
-
-            child = None
-            female = user if user.gender == 'female' else second_user if second_user.gender == 'female' else None
-            male = user if user.gender == 'male' else second_user if second_user.gender == 'male' else None
-            if male and female and female.age >= 12:
-
-                childs_queue = await cls.get_childs_queue(chat=m.chat.id)
-                if childs_queue:
-                    child = random.choice(childs_queue)
-
-            if child:
-                mother = user if user.gender == 'female' else second_user
-                father = user if user.gender == 'male' else second_user
-                end_message += ('\n\n<a href="tg://user?id=%d">%s</a> забеременела и родила '
-                                '<a href="tg://user?id=%d">%s</a>' % (mother.tg_id, mother.name, child.tg_id,
-                                                                      child.name)
-                                )
-                await cls.born_child(mother, father, child, m.chat.id)
-
-        await m.answer(start_message)
-        await asyncio.sleep(random.randint(10, 120))
-        await m.answer(end_message)
+    async def process_fuck(cls, dp: Dispatcher, bot: Bot, chat_tg_id: int, user: Player, second_user: Player):
         for u in [user, second_user]:
-            await dp.current_state(chat=m.chat.id, user=u.tg_id).finish()
-
-    @staticmethod
-    async def born_child(mother: Player, father: Player, child: User, chat: typing.Union[Group, int]):
-        if isinstance(chat, Group):
-            chat = Group.chat_tg_id
-        child.delete()
-        child = User(tg_id=child.tg_id, name=child.name, gender=child.gender, age=0, chats=child.chats,
-                     parents=[mother.pk, father.pk])
-        child.save()
-        mother.model.push_child(chat, child.pk)
-        father.model.push_child(chat, child.pk)
-
-    @staticmethod
-    async def get_childs_queue(chat: typing.Union[Group, int]) -> typing.Optional[typing.Iterable[User]]:
-        if isinstance(chat, Group):
-            chat = chat.chat_tg_id
-        return User.objects(age=-1, chats=chat)
+            current_state = dp.current_state(chat=chat_tg_id, user=u.tg_id)
+            await current_state.set_state(FuckForm.fucking)
+            if second_user == user:
+                break
+        output = user.fuck(chat_tg_id, second_user, delay=random.randint(10, 120))
+        async for out in output:
+            await bot.send_message(chat_tg_id, out)
+        for u in [user, second_user]:
+            await dp.current_state(chat=chat_tg_id, user=u.tg_id).finish()
+            if second_user == user:
+                break
 
 
 class CountryDoesntExistException(Exception):

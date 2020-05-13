@@ -5,7 +5,7 @@ from aiogram.dispatcher import FSMContext
 from ..core import Command
 from ..game import Game
 from game.types import Player, Country
-from models import *
+from .me import Me
 
 
 class CreateCountryForm(StatesGroup):
@@ -33,6 +33,10 @@ class Start(Command):
         if not player.exists:
             await m.answer('Привет, незнакомец. Ты в стране %s. Напиши мне в лс, чтобы играть.' % country.name)
             return
+        if not player.alive:
+            await m.answer('Привет, мертвец. Ты в стране %s. Напиши мне в лс, чтобы ожить. '
+                           'Мертвые не играют' % country.name)
+            return
         if m.chat.id not in player.chats:
             await player.join_chat(m.chat.id)
         await m.answer('Привет, %s. Ты находишься в стране %s' % (player.name, country.name))
@@ -40,18 +44,15 @@ class Start(Command):
     @classmethod
     async def execute_in_private(cls, m: Message):
         player = Player(tg_id=m.from_user.id)
+
         if not player.exists:
             await Game.process_new_user(m)
             return
-
-        if not player.parents:
-            await m.answer('Ждите своего рождения')
+        if not player.alive and not player.in_born_queue:
+            await Game.process_rebornig_user(m)
             return
 
-        parent = Player(model_id=player.parents[0]).name if player.parents[0] != '0' else 'Ева'
-        second_parent = Player(model_id=player.parents[1]).name if player.parents[1] != '0' else 'Адам'
-        await m.answer('Имя: %s\nПол: %s\nВозраст: %s\nРодители: %s, %s\n' %
-                       (player.name, player.gender, player.age, parent, second_parent))
+        await Me.execute_in_private(m, player)
 
     @classmethod
     async def set_country_name(cls, m: Message, state: FSMContext):

@@ -17,7 +17,7 @@ class Fuck(Command):
         if m.from_user.id != m.reply_to_message.from_user.id:
             second_player = Player(tg_id=m.reply_to_message.from_user.id)
         else:
-            await cls.accept_fuck(data=f'{player.tg_id} {player.tg_id}')
+            await cls.accept_fuck(data=f'{player.tg_id} {player.tg_id}', message=m)
             return
 
         kb = InlineKeyboardMarkup()
@@ -29,7 +29,7 @@ class Fuck(Command):
                        % (second_player.tg_id, second_player.name, player.tg_id, player.name), reply_markup=kb)
 
     @classmethod
-    async def accept_fuck(cls, c: CallbackQuery = None, data: str = None):
+    async def accept_fuck(cls, c: CallbackQuery = None, data: str = None, message: Message = None):
         if c:
             data = c.data
 
@@ -38,8 +38,9 @@ class Fuck(Command):
         player = Player(tg_id=user)
         second_player = Player(tg_id=second_user) if user != second_user else player
 
-        await c.message.delete()
-        await Game.process_fuck(cls.dp, c.message, player, second_player)
+        msg = message or c.message
+        await msg.delete()
+        await Game.process_fuck(cls.dp, cls.bot, msg.chat.id, player, second_player)
 
     @staticmethod
     async def decline_fuck(c: CallbackQuery):

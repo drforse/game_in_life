@@ -21,3 +21,5 @@ def register_handlers():
     Suicide.register(commands=['suicide'])
 
     Divorce.register(commands=['divorce'])
+
+    Me.register(commands=['me'])

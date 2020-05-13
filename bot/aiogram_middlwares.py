@@ -15,9 +15,12 @@ class CheckAgeMiddlware(BaseMiddleware):
         super(CheckAgeMiddlware, self).__init__()
 
     async def on_process_message(self, m: Message, data: dict = None):
-        user = User.get(tg_id=m.from_user.id, age__gte=0, age__lte=100)
-        if not user:
-            user = User.get(tg_id=m.from_user.id)
+        command = data.get('command')
+        command = command.command if command else command
+        if command == 'date':
+            await m.answer('Not implemented yet')
+            return
+        user = User.get(tg_id=m.from_user.id)
         if not user:
             return
 
@@ -25,11 +28,9 @@ class CheckAgeMiddlware(BaseMiddleware):
         current_state = await (dp.current_state(chat=m.chat.id, user=m.from_user.id)).get_state()
 
         if user.age > 100:
-            command = data.get('command')
-            command = command.command if command else command
             if (command != 'start' or m.chat.type != 'private') and not current_state:
-                    await m.reply('Вы умерли. Чтобы заново родиться, напишите /start мне в лс')
-                    raise CancelHandler
+                await m.reply('Вы умерли. Чтобы заново родиться, напишите /start мне в лс')
+                raise CancelHandler
 
 
 class AuthMiddlware(BaseMiddleware):
@@ -66,7 +67,11 @@ class AuthMiddlware(BaseMiddleware):
             player = Player(tg_id=user)
             member = await m.bot.get_chat_member(m.chat.id, user)
             if not player.exists:
-                await m.answer('<a href="tg://user?id=%s">%s</a> мёртв или не играет.' %
+                await m.answer('<a href="tg://user?id=%s">%s</a> не играет.' %
+                               (player.tg_id, member.user.first_name or member.user.last_name))
+                raise CancelHandler
+            if not player.alive:
+                await m.answer('<a href="tg://user?id=%s">%s</a> мёртв.' %
                                (player.tg_id, member.user.first_name or member.user.last_name))
                 raise CancelHandler
 
@@ -77,6 +82,6 @@ class AuthMiddlware(BaseMiddleware):
             return
 
         menu_owner = int(menu_owner)
-        if c.from_user != menu_owner:
+        if c.from_user.id != menu_owner:
             await c.answer('Это не твое меню', show_alert=True)
             raise CancelHandler
