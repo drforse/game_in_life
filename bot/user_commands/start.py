@@ -58,7 +58,7 @@ class Start(Command):
     async def set_country_name(cls, m: Message, state: FSMContext):
         if not m.reply_to_message:
             return
-        member = await m.chat.get_member(m.reply_to_message.from_user.id)
+        member = await m.chat.get_member(m.from_user.id)
         if member.status not in ['administrator', 'creator']:
             await m.answer('Название страны может задавать только админ группы')
             return
