@@ -1,11 +1,7 @@
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import Dispatcher
 from aiogram import Bot
-import logging
 import os
-
-
-logging.basicConfig(level=logging.INFO)
 
 
 API_TOKEN = os.environ['bot_token']
