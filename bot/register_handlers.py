@@ -23,3 +23,9 @@ def register_handlers():
     Divorce.register(commands=['divorce'])
 
     Me.register(commands=['me'])
+
+    Date.register(commands=['date'])
+    Date.reg_callback(Date.accept_dating, lambda c: c.data.startswith('dating accept '))
+    Date.reg_callback(Date.decline_dating, lambda c: c.data.startswith('dating decline '))
+
+    Breakup.register(commands=['breakup'])

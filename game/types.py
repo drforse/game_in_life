@@ -14,8 +14,21 @@ class Player:
     cant_marry_reason_exaplanation = {'married': 'Вы уже в браке в этой стране',
                                       'partner_married': 'Вы не можете вступить в брак с тем, кто уже в браке',
                                       'partner_dead': 'Вы не можете вступить в брак с тем, кто не жив',
-                                      'too_young': 'Вступать в брак можно только с 16-ти лет, до 16-ти можно только встречаться - /date',
-                                      'cant_marry_self': 'Нельзя вступать в брак с самим собой'}
+                                      'too_young': 'Вступать в брак можно только с 16-ти лет, '
+                                                   'до 16-ти можно только встречаться - /date',
+                                      'cant_marry_self': 'Нельзя вступать в брак с самим собой',
+                                      'is_dating_another_person': 'Вы не можете вступить в брак с кем-то, '
+                                                                  'если Вы встречаетесь с другим человеклм',
+                                      'partner_is_dating_another_person': 'Этот человек состоит в романтических '
+                                                                          'отношениях с кем-то другим'}
+
+    cant_date_reason_exaplanation = {'lover_dead': 'Вы не можете встречаться с тем, кто не жив',
+                                     'cant_date_self': 'Вы не можете встречаться с самим собой',
+                                     'is_dating': 'Вы не можете встречаться с тем, кто уже состоит '
+                                                  'в романтических отношениях',
+                                     'married': 'Вы в браке',
+                                     'lover_married': 'Вы не можете встречаться с тем, кто состоит в браке',
+                                     'lover_dating': 'Этот человек с кем-то уже встречается'}
 
     def __init__(self, tg_id: int = None, model_id: ObjectId = None, model: User = None):
         self.tg_id = tg_id
@@ -27,6 +40,7 @@ class Player:
         self.chats = None
         self.parents = None
         self.partners = None
+        self.lovers = None
         self.childs = None
         self.alive = None
         self.in_born_queue = None
@@ -54,6 +68,7 @@ class Player:
         self.chats = model.chats
         self.parents = model.parents
         self.partners = model.partners
+        self.lovers = model.lovers
         self.childs = model.childs
         self.alive = -1 < model.age < 101
         self.in_born_queue = model.age == -1
@@ -113,8 +128,22 @@ class Player:
 
         self.model.update(__raw__={'$set': {f'partners.{chat_tg_id}': partner.id}})
         partner.model.update(__raw__={'$set': {f'partners.{chat_tg_id}': self.id}})
+        self.model.unset_lover(chat_tg_id)
+        partner.model.unset_lover(chat_tg_id)
         return ('Поздавляем <a href="tg://user?id=%d">%s</a> и <a href="tg://user?id=%d">%s</a> со свадьбой' %
                 (self.tg_id, self.name, partner.tg_id, partner.name))
+
+    async def date(self, chat_tg_id: int, lover_tg_id: int):
+        lover = Player(tg_id=lover_tg_id)
+
+        can_date = await self.can_date(chat_tg_id, lover)
+        if not can_date['result']:
+            return self.cant_marry_reason_exaplanation[can_date['reason']]
+
+        self.model.update(__raw__={'$set': {f'lovers.{chat_tg_id}': lover.id}})
+        lover.model.update(__raw__={'$set': {f'lovers.{chat_tg_id}': self.id}})
+        return ('<a href="tg://user?id=%d">%s</a> и <a href="tg://user?id=%d">%s</a> теперь встречаются' %
+                (self.tg_id, self.name, lover.tg_id, lover.name))
 
     async def can_marry(self, chat_tg_id: int, partner: Player) -> typing.Dict:
         """
@@ -129,10 +158,36 @@ class Player:
             return {'result': False, 'reason': 'cant_marry_self'}
         if self.age < 16 or partner.age < 16:
             return {'result': False, 'reason': 'too_young'}
+        if self.lovers.get(str(chat_tg_id), partner.id) != partner.id:
+            return {'result': False, 'reason': 'is_dating_another_person'}
+        if partner.lovers.get(str(chat_tg_id), self.id) != self.id:
+            return {'result': False, 'reason': 'partner_is_dating_another_person'}
         if str(chat_tg_id) in self.partners:
             return {'result': False, 'reason': 'married'}
         if str(chat_tg_id) in partner.partners:
             return {'result': False, 'reason': 'partner_married'}
+
+        return {'result': True, 'reason': ''}
+
+    async def can_date(self, chat_tg_id: int, lover: Player) -> typing.Dict:
+        """
+
+        :param chat_tg_id:
+        :param lover:
+        :return: {'result': boolean, 'reason': str}
+        """
+        if not lover.alive:
+            return {'result': False, 'reason': 'lover_dead'}
+        if self.tg_id == lover.tg_id:
+            return {'result': False, 'reason': 'cant_date_self'}
+        if str(chat_tg_id) in self.lovers:
+            return {'result': False, 'reason': 'is_dating'}
+        if str(chat_tg_id) in self.partners:
+            return {'result': False, 'reason': 'married'}
+        if str(chat_tg_id) in lover.partners:
+            return {'result': False, 'reason': 'lover_married'}
+        if str(chat_tg_id) in lover.lovers:
+            return {'result': False, 'reason': 'lover_dating'}
 
         return {'result': True, 'reason': ''}
 
@@ -143,6 +198,14 @@ class Player:
             partner_model = User(model_id=self.model.partners[str(chat_tg_id)])
         self.model.unset_partner(chat_tg_id)
         partner_model.unset_partner(chat_tg_id)
+
+    async def break_up(self, chat_tg_id: int, lover: typing.Union[User, Player, int, ObjectId] = None):
+        if lover:
+            lover_model = await self.resolve_user(lover, 'User')
+        else:
+            lover_model = User(model_id=self.model.lovers[str(chat_tg_id)])
+        self.model.unset_lover(chat_tg_id)
+        lover_model.unset_lover(chat_tg_id)
 
     async def fuck(self, chat_id, partner: typing.Union[User, Player, int, ObjectId], delay: int = 300):
         partner = await self.resolve_user(partner, 'Player')

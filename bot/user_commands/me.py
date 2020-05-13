@@ -17,6 +17,7 @@ class Me(Command):
         parent = 'Ева'
         second_parent = 'Адам'
         partner = None
+        lover = None
         childs = []
         if player.parents[0] != '0':
             parent = Player(model_id=player.parents[0]).name
@@ -24,17 +25,30 @@ class Me(Command):
             second_parent = Player(model_id=player.parents[1]).name
         if player.partners.get(str(m.chat.id)):
             partner = Player(model_id=player.partners[str(m.chat.id)])
+        if player.lovers.get(str(m.chat.id)):
+            lover = Player(model_id=player.lovers[str(m.chat.id)])
         if player.childs.get(str(m.chat.id)):
             childs = [Player(model_id=child_id) for child_id in player.childs[str(m.chat.id)]]
         text = ('Имя: %s\nПол: %s\nВозраст: %s\nРодители: %s, %s\n' %
                 (player.name, player.gender, player.age, parent, second_parent))
         if partner:
             if partner.gender == 'female':
-                text += 'Жена: %s' % partner.name
+                s = 'Жена: %s'
             elif partner.gender == 'male':
-                text += 'Муж: %s' % partner.name
+                s = 'Муж: %s'
             else:
-                text += 'Партнер: %s' % partner.name
+                s = 'Партнер: %s'
+            text += s % partner.name
+
+        if lover:
+            if lover.gender == 'female':
+                s = 'Девушка: %s'
+            elif lover.gender == 'male':
+                s = 'Парень: %s'
+            else:
+                s = 'Встречается с: %s'
+            text += s % lover.name
+
         if childs:
             text += '\nДети:\n'
         for child in childs:

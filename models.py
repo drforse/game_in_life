@@ -24,6 +24,7 @@ class User(Document, MyDocument):
     age = IntField(max_value=101, min_value=-1, default=0)
     chats = ListField(IntField())  # [chat_id]
     partners = DictField(default={})  # {chat_id: partner_id}
+    lovers = DictField(default={})  # {chat_id: lover_id}
     childs = DictField(default={})  # {chat_id: List[child_id]}
     parents = ListField(default=[])
 
@@ -62,6 +63,14 @@ class User(Document, MyDocument):
 
     def unset_partner(self, chat):
         self.update(__raw__={'$unset': {f'partners.{chat}': {'$exists': True}}})
+        self.save()
+
+    def set_lover(self, chat, lover):
+        self.update(__raw__={'$set': {f'lovers.{chat}': lover}})
+        self.save()
+
+    def unset_lover(self, chat):
+        self.update(__raw__={'$unset': {f'lovers.{chat}': {'$exists': True}}})
         self.save()
 
 
