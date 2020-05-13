@@ -1,4 +1,5 @@
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram import exceptions as aio_exceptions
 
 from ..core import Command
 from ..game import Game
@@ -39,7 +40,10 @@ class Fuck(Command):
         second_player = Player(tg_id=second_user) if user != second_user else player
 
         msg = message or c.message
-        await msg.delete()
+        try:
+            await msg.delete()
+        except aio_exceptions.MessageCantBeDeleted:
+            pass
         await Game.process_fuck(cls.dp, cls.bot, msg.chat.id, player, second_player)
 
     @staticmethod
