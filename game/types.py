@@ -210,11 +210,11 @@ class Player:
         partner = await self.resolve_user(partner, 'Player')
         if self.tg_id == partner.tg_id:
             if self.gender == 'male':
-                sex_type = 'masturbate male'
+                sex_type = 'masturbate_male'
             elif self.gender == 'female':
-                sex_type = 'masturbate female'
+                sex_type = 'masturbate_female'
             else:
-                sex_type = 'masturbate transgender'
+                sex_type = 'masturbate_transgender'
         elif self.gender == 'male' and partner.gender == 'female':
             sex_type = 'hetero'
         elif self.gender == 'female' and partner.gender == 'female':
@@ -238,7 +238,7 @@ class Player:
                             (self.tg_id, self.name, partner.tg_id, partner.name)
             end_message = '<a href="tg://user?id=%d">%s</a> и <a href="tg://user?id=%d">%s</a> закончили трахаться' % \
                           (self.tg_id, self.name, partner.tg_id, partner.name)
-        universal_type = 'universal' if not sex_type.startswith('masturbate') else 'masturbate universal'
+        universal_type = 'universal' if not sex_type.startswith('masturbate') else 'masturbate_universal'
 
         yield {'content_type': 'text', 'content': start_message}
         possible_gif_models = SexGifs.objects(Q(type=sex_type) | Q(type=universal_type))
