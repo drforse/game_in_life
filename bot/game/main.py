@@ -9,6 +9,7 @@ import asyncio
 
 from models import *
 from game.types import Player
+from config import SEX_DELAY_INTERVAL
 
 
 class CreatePlayerForm(StatesGroup):
@@ -126,13 +127,16 @@ class Game:
                 pass
 
     @classmethod
-    async def process_fuck(cls, dp: Dispatcher, bot: Bot, chat_tg_id: int, user: Player, second_user: Player):
+    async def process_accepted_action(cls, action: str, dp: Dispatcher, bot: Bot,
+                                      chat_tg_id: int, user: Player, second_user: Player):
         for u in [user, second_user]:
             current_state = dp.current_state(chat=chat_tg_id, user=u.tg_id)
             await current_state.set_state(FuckForm.fucking)
             if second_user == user:
                 break
-        output = user.fuck(chat_tg_id, second_user, delay=random.randint(10, 120))
+        output = await user.action(action, chat_tg_id, second_user,
+                                   delay=random.randint(SEX_DELAY_INTERVAL[0],
+                                                        SEX_DELAY_INTERVAL[1]))
         async for out in output:
             if out['content_type'] == 'animation':
                 try:
@@ -150,6 +154,56 @@ class Game:
             await dp.current_state(chat=chat_tg_id, user=u.tg_id).finish()
             if second_user == user:
                 break
+
+    @classmethod
+    async def process_declined_action(cls, action: str, callback_query,
+                                      player: Player, second_player: Player):
+        callback_answer = ''
+        edit_text = ''
+        verb_form = ('отказала' if second_player.gender == 'male' else 'отказал'
+                                if second_player.gender == 'female' else 'отказал(а)')
+        if action == 'fuck':
+            callback_answer = 'Блин, а я уже камеру приготовил (9(('
+            edit_text = '<a href="tg://user?id=%d">%s</a> не хочет ебаться с <a href="tg://user?id=%d">%s</a>'
+        elif action == 'marriage':
+            callback_answer = 'А жаль...'
+            edit_text = ('<a href="tg://user?id=%d">%s</a> {} в браке '
+                         '<a href="tg://user?id=%d">%s</a>'.format(verb_form))
+        elif action == 'dating':
+            callback_answer = 'А жаль...'
+            edit_text = ('<a href="tg://user?id=%d">%s</a> {} в романтических '
+                         'отношениях <a href="tg://user?id=%d">%s</a>'.format(verb_form))
+
+        edit_text = edit_text % (second_player.tg_id, second_player.name, player.tg_id, player.name)
+        await callback_query.answer(callback_answer)
+        await callback_query.message.edit_text(edit_text, reply_markup=None)
+
+
+    # @classmethod
+    # async def process_fuck(cls, dp: Dispatcher, bot: Bot, chat_tg_id: int, user: Player, second_user: Player):
+    #     for u in [user, second_user]:
+    #         current_state = dp.current_state(chat=chat_tg_id, user=u.tg_id)
+    #         await current_state.set_state(FuckForm.fucking)
+    #         if second_user == user:
+    #             break
+    #     output = user.fuck(chat_tg_id, second_user, delay=random.randint(10, 120))
+    #     async for out in output:
+    #         if out['content_type'] == 'animation':
+    #             try:
+    #                 await bot.send_animation(chat_tg_id, out['content'])
+    #             except:
+    #                 pass
+    #         elif out['content_type'] == 'text':
+    #             try:
+    #                 await bot.send_message(chat_tg_id, out['content'])
+    #             except:
+    #                 pass
+    #         else:
+    #             raise ContentTypeUnexpected(out['content_type'])
+    #     for u in [user, second_user]:
+    #         await dp.current_state(chat=chat_tg_id, user=u.tg_id).finish()
+    #         if second_user == user:
+    #             break
 
 
 class CountryDoesntExistException(Exception):

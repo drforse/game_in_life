@@ -136,26 +136,28 @@ class Player:
 
         can_marry = await self.can_marry(chat_tg_id, partner)
         if not can_marry['result']:
-            return self.cant_marry_reason_exaplanation[can_marry['reason']]
+            yield {'content_type': 'text', 'content': self.cant_marry_reason_exaplanation[can_marry['reason']]}
 
         self.model.set_partner(chat_tg_id, partner.tg_id)  # update(__raw__={'$set': {f'partners.{chat_tg_id}': partner.tg_id}})
         partner.model.set_partner(chat_tg_id, self.tg_id)  # update(__raw__={'$set': {f'partners.{chat_tg_id}': self.tg_id}})
         self.model.unset_lover(chat_tg_id)
         partner.model.unset_lover(chat_tg_id)
-        return ('Поздавляем <a href="tg://user?id=%d">%s</a> и <a href="tg://user?id=%d">%s</a> со свадьбой' %
+        text = ('Поздавляем <a href="tg://user?id=%d">%s</a> и <a href="tg://user?id=%d">%s</a> со свадьбой' %
                 (self.tg_id, self.name, partner.tg_id, partner.name))
+        yield {'content_type': 'text', 'content': text}
 
     async def date(self, chat_tg_id: int, lover_tg_id: int):
         lover = Player(tg_id=lover_tg_id)
 
         can_date = await self.can_date(chat_tg_id, lover)
         if not can_date['result']:
-            return self.cant_date_reason_exaplanation[can_date['reason']]
+            yield {'content_type': 'text', 'content': self.cant_date_reason_exaplanation[can_date['reason']]}
 
         self.model.set_lover(chat_tg_id, lover.tg_id)  # update(__raw__={'$set': {f'lovers.{chat_tg_id}': lover.tg_id}})
         lover.model.set_lover(chat_tg_id, self.tg_id)  # update(__raw__={'$set': {f'lovers.{chat_tg_id}': self.tg_id}})
-        return ('<a href="tg://user?id=%d">%s</a> и <a href="tg://user?id=%d">%s</a> теперь встречаются' %
+        text = ('<a href="tg://user?id=%d">%s</a> и <a href="tg://user?id=%d">%s</a> теперь встречаются' %
                 (self.tg_id, self.name, lover.tg_id, lover.name))
+        yield {'content_type': 'text', 'content': text}
 
     async def can_marry(self, chat_tg_id: int, partner: Player) -> typing.Dict:
         """
@@ -219,9 +221,17 @@ class Player:
         self.model.unset_lover(chat_tg_id)
         lover_model.unset_lover(chat_tg_id)
 
-    async def fuck(self, chat_id, partner: typing.Union[User, Player, int], delay: int = 300):
+    async def action(self, action: str, chat_id: int, partner: typing.Union[User, Player, int],
+                     delay: int = 300) -> typing.AsyncGenerator:
         partner = await self.resolve_user(partner, 'Player')
+        if action == 'fuck':
+            return self.fuck(chat_id, partner, delay)
+        if action == 'dating':
+            return self.date(chat_id, partner.tg_id)
+        if action == 'marriage':
+            return self.marry(chat_id, partner.tg_id)
 
+    async def fuck(self, chat_id, partner: Player, delay: int = 300):
         sex_types = await self.get_sex_types(partner)
         sex_type = sex_types['main']
         universal_sex_type = sex_types['universal']
@@ -239,8 +249,6 @@ class Player:
         yield {'content_type': 'text', 'content': start_message}
 
         possible_gifs = await self.get_possible_sex_gifs(sex_type, universal_sex_type)
-        print(possible_gifs)
-        print(sex_type)
 
         if possible_gifs:
             yield {'content_type': 'animation', 'content': random.choice(possible_gifs)}

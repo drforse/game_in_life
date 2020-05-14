@@ -1,7 +1,10 @@
+import re
+
 from .game import Game, CreatePlayerForm
 from .user_commands import *
 from .dev_commands import *
 from .core import Command
+from .user_commands.base.action import BaseAction
 
 
 def register_handlers():
@@ -11,13 +14,12 @@ def register_handlers():
     Command.register(callback=Game.get_new_player_name, state=CreatePlayerForm.set_name)
     Command.register(callback=Game.get_new_player_gender, state=CreatePlayerForm.set_gender)
 
+    BaseAction.reg_callback(BaseAction.accept_action, lambda c: re.match('action .* accept ', c.data))
+    BaseAction.reg_callback(BaseAction.decline_action, lambda c: re.match('action .* decline ', c.data))
+
     Marry.register(commands=['marry'])
-    Marry.reg_callback(Marry.accept_marriage, lambda c: c.data.startswith('marriage accept '))
-    Marry.reg_callback(Marry.decline_marriage, lambda c: c.data.startswith('marriage decline '))
 
     Fuck.register(commands=['fuck'])
-    Fuck.reg_callback(Fuck.accept_fuck, lambda c: c.data.startswith('fuck accept '))
-    Fuck.reg_callback(Fuck.decline_fuck, lambda c: c.data.startswith('fuck decline '))
 
     Suicide.register(commands=['suicide'])
 
@@ -26,8 +28,6 @@ def register_handlers():
     Me.register(commands=['me'])
 
     Date.register(commands=['date'])
-    Date.reg_callback(Date.accept_dating, lambda c: c.data.startswith('dating accept '))
-    Date.reg_callback(Date.decline_dating, lambda c: c.data.startswith('dating decline '))
 
     Breakup.register(commands=['breakup'])
 
