@@ -29,8 +29,10 @@ class Me(Command):
             lover = Player(tg_id=player.lovers[str(m.chat.id)])
         if player.childs.get(str(m.chat.id)):
             childs = [Player(tg_id=child_id) for child_id in player.childs[str(m.chat.id)]]
-        text = ('Имя: %s\nПол: %s\nВозраст: %s\nРодители: %s, %s\n' %
-                (player.name, player.gender, player.age, parent, second_parent))
+
+        text = ('Имя: %s %s\nВозраст: %s\nРодители: %s, %s\n' %
+                (player.name, player.gender_emoji_reference[player.gender],
+                 player.age, parent, second_parent))
         if partner:
             if partner.gender == 'female':
                 s = 'Жена: %s'
@@ -71,5 +73,6 @@ class Me(Command):
 
         parent = Player(tg_id=player.parents[0]).name if player.parents[0] != '0' else 'Ева'
         second_parent = Player(tg_id=player.parents[1]).name if player.parents[1] != '0' else 'Адам'
-        await m.answer('Имя: %s\nПол: %s\nВозраст: %s\nРодители: %s, %s\n' %
-                       (player.name, player.gender, player.age, parent, second_parent))
+        await m.answer('Имя: %s %s\nВозраст: %s\nРодители: %s, %s\n' %
+                       (player.name, player.gender_emoji_reference[player.gender],
+                        player.age, parent, second_parent))

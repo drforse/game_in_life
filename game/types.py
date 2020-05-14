@@ -31,6 +31,8 @@ class Player:
                                      'lover_married': 'Вы не можете встречаться с тем, кто состоит в браке',
                                      'lover_dating': 'Этот человек с кем-то уже встречается'}
 
+    gender_emoji_reference = {'male': '♂️', 'female': '♀️', 'transgender': '♂️♀️'}
+
     def __init__(self, tg_id: int = None, model: User = None):
         self.tg_id = tg_id
         self.exists = False
