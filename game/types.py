@@ -221,8 +221,14 @@ class Player:
             sex_type = 'lesbian'
         elif self.gender == 'male' and partner.gender == 'male':
             sex_type = 'gay'
+        elif ((self.gender == 'female' and partner.gender == 'transgender') or
+              (self.gender == 'transgender' and partner.gender == 'female')):
+            sex_type = 'transgender_and_female'
+        elif ((self.gender == 'male' and partner.gender == 'transgender') or
+              (self.gender == 'transgender' and partner.gender == 'male')):
+            sex_type = 'transgender_and_male'
         else:
-            sex_type = 'transgender'
+            sex_type = 'transgenders'
         if sex_type.startswith('masturbate'):
             verb_form = 'кончил' if self.gender == 'male' else 'кончила' if self.gender == 'female' else 'кончил(а)'
             start_message = '<a href="tg://user?id=%d">%s</a> дрочит.' % (self.tg_id, self.name)

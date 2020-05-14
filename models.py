@@ -80,7 +80,7 @@ class Group(Document, MyDocument):
 
 
 class SexGifs(Document, MyDocument):
-    type = StringField(max_length=15, required=True, unique=True)  # hetero, lesbian, gay, masturbate, universal
+    type = StringField(required=True, unique=True)  # hetero, lesbian, gay, masturbate, universal
     gif_ids = ListField(required=True)
 
     @classmethod
@@ -93,7 +93,7 @@ class SexGifs(Document, MyDocument):
 
 
 class CumSexGifs(Document, MyDocument):
-    type = StringField(max_length=50, required=True, unique=True)  # hetero, lesbian, gay, masturbate, universal
+    type = StringField(required=True, unique=True)  # hetero, lesbian, gay, masturbate, universal
     gif_ids = ListField(required=True)
 
     @classmethod
