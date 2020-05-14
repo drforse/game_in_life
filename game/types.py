@@ -213,10 +213,8 @@ class Player:
                 sex_type = 'masturbate male'
             elif self.gender == 'female':
                 sex_type = 'masturbate female'
-            elif self.gender == 'transgender':
-                sex_type = 'masturbate transgender'
             else:
-                sex_type = 'masturbate universal'
+                sex_type = 'masturbate transgender'
         elif self.gender == 'male' and partner.gender == 'female':
             sex_type = 'hetero'
         elif self.gender == 'female' and partner.gender == 'female':
@@ -224,7 +222,7 @@ class Player:
         elif self.gender == 'male' and partner.gender == 'male':
             sex_type = 'gay'
         else:
-            sex_type = 'universal'
+            sex_type = 'transgender'
         if sex_type.startswith('masturbate'):
             verb_form = 'кончил' if self.gender == 'male' else 'кончила' if self.gender == 'female' else 'кончил(а)'
             start_message = '<a href="tg://user?id=%d">%s</a> дрочит.' % (self.tg_id, self.name)
