@@ -13,7 +13,7 @@ class Fuck(BaseAction):
         if m.from_user.id != m.reply_to_message.from_user.id:
             second_player = Player(tg_id=m.reply_to_message.from_user.id)
         else:
-            await cls.accept_action(data=f'{player.tg_id} {player.tg_id}', message=m)
+            await cls.accept_action(data=f'action fuck accept {player.tg_id} {player.tg_id}', message=m)
             return
 
         kb = InlineKeyboardMarkup()
