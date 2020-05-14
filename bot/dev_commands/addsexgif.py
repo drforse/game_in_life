@@ -15,5 +15,5 @@ class AddSexGif(Command):
         gif = m.reply_to_message.animation
         sex_types = m.text.split()[1:]
         for sex_type in sex_types:
-            SexGifs.push_gif(sex_type, gif.file_id)
+            SexGifs.push_gif(sex_type, gif.file_id, gif.file_unique_id)
         await m.answer('Success')

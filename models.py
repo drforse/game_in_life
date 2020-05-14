@@ -84,12 +84,22 @@ class SexGifs(Document, MyDocument):
     gif_ids = ListField(required=True)
 
     @classmethod
-    def push_gif(cls, sex_type: str, gif_id: str):
+    def push_gif(cls, sex_type: str, gif_id: str, gif_unique_id: str):
         model = cls.get(type=sex_type)
         if not model:
-            cls(type=sex_type, gif_ids=[gif_id]).save()
+            cls(type=sex_type, gif_ids=[{'file_id': gif_id,
+                                         'file_unique_id': gif_unique_id}]).save()
             return
-        model.update(push__gif_ids=gif_id)
+        model.update(push__gif_ids={'file_id': gif_id,
+                                    'file_unique_id': gif_unique_id})
+
+    @classmethod
+    def pull_gif(cls, sex_type: str, gif_unique_id: str):
+        model = cls.get(type=sex_type)
+        if not model:
+            return
+        model.update(pull__gif_ids={'file_id': {'$exists': True},
+                                    'file_unique_id': gif_unique_id})
 
 
 class CumSexGifs(Document, MyDocument):
@@ -97,12 +107,23 @@ class CumSexGifs(Document, MyDocument):
     gif_ids = ListField(required=True)
 
     @classmethod
-    def push_gif(cls, sex_type: str, gif_id: str):
+    def push_gif(cls, sex_type: str, gif_id: str, gif_unique_id: str):
         model = cls.get(type=sex_type)
         if not model:
-            cls(type=sex_type, gif_ids=[gif_id]).save()
+            cls(type=sex_type, gif_ids=[{'file_id': gif_id,
+                                         'file_unique_id': gif_unique_id}]).save()
             return
-        model.update(push__gif_ids=gif_id)
+        model.update(push__gif_ids={'file_id': gif_id,
+                                    'file_unique_id': gif_unique_id})
+
+    @classmethod
+    def pull_gif(cls, sex_type: str, gif_unique_id: str):
+        print(sex_type, gif_unique_id)
+        model = cls.get(type=sex_type)
+        if not model:
+            return
+        model.update(pull__gif_ids={'file_id': {'$exists': True},
+                                    'file_unique_id': gif_unique_id})
 
 
 __all__ = ['User',

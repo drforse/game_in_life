@@ -4,7 +4,7 @@ from ..core import Command
 from models import CumSexGifs
 
 
-class AddCumSexGif(Command):
+class DelCumSexGif(Command):
 
     @staticmethod
     async def execute(m: Message):
@@ -15,5 +15,5 @@ class AddCumSexGif(Command):
         gif = m.reply_to_message.animation
         sex_types = m.text.split()[1:]
         for sex_type in sex_types:
-            CumSexGifs.push_gif(sex_type, gif.file_id, gif.file_unique_id)
+            CumSexGifs.pull_gif(sex_type, gif.file_unique_id)
         await m.answer('Success')

@@ -34,3 +34,7 @@ def register_handlers():
     AddSexGif.register(commands=['addsexgif'])
 
     AddCumSexGif.register(commands=['addcumsexgif'])
+
+    DelSexGif.register(commands=['delsexgif'])
+
+    DelCumSexGif.register(commands=['delcumsexgif'])

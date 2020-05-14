@@ -239,6 +239,8 @@ class Player:
         yield {'content_type': 'text', 'content': start_message}
 
         possible_gifs = await self.get_possible_sex_gifs(sex_type, universal_sex_type)
+        print(possible_gifs)
+        print(sex_type)
 
         if possible_gifs:
             yield {'content_type': 'animation', 'content': random.choice(possible_gifs)}
@@ -285,6 +287,8 @@ class Player:
                 sex_type = 'masturbate_transgender'
         elif self.gender == 'male' and partner.gender == 'female':
             sex_type = 'hetero'
+        elif self.gender == 'female' and partner.gender == 'male':
+            sex_type = 'hetero'
         elif self.gender == 'female' and partner.gender == 'female':
             sex_type = 'lesbian'
         elif self.gender == 'male' and partner.gender == 'male':
@@ -307,7 +311,7 @@ class Player:
         possible_gif_models = SexGifs.objects(Q(type=sex_type) | Q(type=universal_sex_type))
         possible_gifs = []
         for model in possible_gif_models:
-            possible_gifs += model.gif_ids
+            possible_gifs += [gifdict['file_id'] for gifdict in model.gif_ids]
         return possible_gifs
 
     @staticmethod
@@ -315,7 +319,7 @@ class Player:
         possible_gif_models = CumSexGifs.objects(Q(type=sex_type) | Q(type=universal_sex_type))
         possible_gifs = []
         for model in possible_gif_models:
-            possible_gifs += model.gif_ids
+            possible_gifs += [gifdict['file_id'] for gifdict in model.gif_ids]
         return possible_gifs
 
     async def born(self, mother: Player, father: Player, chat: typing.Union[Country, int]):
