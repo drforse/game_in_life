@@ -20,9 +20,9 @@ class Me(Command):
         lover = None
         childs = []
         if player.parents[0] != '0':
-            parent = Player(tg_id=player.parents[0]).name
+            parent = Player(tg_id=player.parents[0])
         if player.parents[1] != '0':
-            second_parent = Player(tg_id=player.parents[1]).name
+            second_parent = Player(tg_id=player.parents[1])
         if player.partners.get(str(m.chat.id)):
             partner = Player(tg_id=player.partners[str(m.chat.id)])
         if player.lovers.get(str(m.chat.id)):
