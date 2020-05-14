@@ -232,9 +232,10 @@ class Player:
                             (self.tg_id, self.name, partner.tg_id, partner.name)
             end_message = '<a href="tg://user?id=%d">%s</a> и <a href="tg://user?id=%d">%s</a> закончили трахаться' % \
                           (self.tg_id, self.name, partner.tg_id, partner.name)
+        universal_type = 'universal' if not sex_type.startswith('masturbate') else 'masturbate universal'
 
         yield {'content_type': 'text', 'content': start_message}
-        possible_gif_models = SexGifs.objects(Q(type=sex_type) | Q(type='universal'))
+        possible_gif_models = SexGifs.objects(Q(type=sex_type) | Q(type=universal_type))
         possible_gifs = []
         for model in possible_gif_models:
             possible_gifs += model.gif_ids
