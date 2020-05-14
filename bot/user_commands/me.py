@@ -1,7 +1,7 @@
 from aiogram.types import Message
 
 from ..core import Command
-from game.types import Player
+from game.types import Player, Eva, Adam
 
 
 class Me(Command):
@@ -14,8 +14,8 @@ class Me(Command):
             return
 
         player = Player(tg_id=m.from_user.id)
-        parent = 'Ева'
-        second_parent = 'Адам'
+        parent = Eva
+        second_parent = Adam
         partner = None
         lover = None
         childs = []
@@ -30,9 +30,10 @@ class Me(Command):
         if player.childs.get(str(m.chat.id)):
             childs = [Player(tg_id=child_id) for child_id in player.childs[str(m.chat.id)]]
 
-        text = ('Имя: %s %s\nВозраст: %s\nРодители: %s, %s\n' %
-                (player.name, player.gender_emoji_reference[player.gender],
-                 player.age, parent, second_parent))
+        emojis = player.gender_emoji_reference
+        text = ('Имя: %s %s\nВозраст: %s\nРодители: %s %s, %s %s\n' %
+                (player.name, emojis[player.gender], player.age,
+                 parent.name, emojis[parent.gender], second_parent.name, emojis[second_parent.gender]))
         if partner:
             if partner.gender == 'female':
                 s = 'Жена: %s'
@@ -71,8 +72,9 @@ class Me(Command):
             await m.answer('Ждите своего рождения')
             return
 
-        parent = Player(tg_id=player.parents[0]).name if player.parents[0] != '0' else 'Ева'
-        second_parent = Player(tg_id=player.parents[1]).name if player.parents[1] != '0' else 'Адам'
-        await m.answer('Имя: %s %s\nВозраст: %s\nРодители: %s, %s\n' %
-                       (player.name, player.gender_emoji_reference[player.gender],
-                        player.age, parent, second_parent))
+        parent = Player(tg_id=player.parents[0]) if player.parents[0] != '0' else Eva
+        second_parent = Player(tg_id=player.parents[1]) if player.parents[1] != '0' else Adam
+        emojis = player.gender_emoji_reference
+        await m.answer('Имя: %s %s\nВозраст: %s\nРодители: %s %s, %s %s\n' %
+                       (player.name, emojis[player.gender], player.age,
+                        parent.name, emojis[parent.gender], second_parent.name, emojis[second_parent.gender]))

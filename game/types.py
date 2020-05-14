@@ -4,7 +4,6 @@ import logging
 import random
 import typing
 import asyncio
-import datetime
 from mongoengine.queryset.visitor import Q
 
 from models import *
@@ -338,3 +337,13 @@ class Country:
 
     async def get_childs_queue(self) -> typing.Optional[typing.Iterable[User]]:
         return User.objects(age=-1, chats=self.chat_tg_id)
+
+
+class Eva:
+    gender = 'female'
+    name = 'Ева'
+
+
+class Adam:
+    gender = 'male'
+    name = 'Адам'
