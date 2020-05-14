@@ -20,15 +20,15 @@ class Me(Command):
         lover = None
         childs = []
         if player.parents[0] != '0':
-            parent = Player(model_id=player.parents[0]).name
+            parent = Player(tg_id=player.parents[0]).name
         if player.parents[1] != '0':
-            second_parent = Player(model_id=player.parents[1]).name
+            second_parent = Player(tg_id=player.parents[1]).name
         if player.partners.get(str(m.chat.id)):
-            partner = Player(model_id=player.partners[str(m.chat.id)])
+            partner = Player(tg_id=player.partners[str(m.chat.id)])
         if player.lovers.get(str(m.chat.id)):
-            lover = Player(model_id=player.lovers[str(m.chat.id)])
+            lover = Player(tg_id=player.lovers[str(m.chat.id)])
         if player.childs.get(str(m.chat.id)):
-            childs = [Player(model_id=child_id) for child_id in player.childs[str(m.chat.id)]]
+            childs = [Player(tg_id=child_id) for child_id in player.childs[str(m.chat.id)]]
         text = ('Имя: %s\nПол: %s\nВозраст: %s\nРодители: %s, %s\n' %
                 (player.name, player.gender, player.age, parent, second_parent))
         if partner:
@@ -69,7 +69,7 @@ class Me(Command):
             await m.answer('Ждите своего рождения')
             return
 
-        parent = Player(model_id=player.parents[0]).name if player.parents[0] != '0' else 'Ева'
-        second_parent = Player(model_id=player.parents[1]).name if player.parents[1] != '0' else 'Адам'
+        parent = Player(tg_id=player.parents[0]).name if player.parents[0] != '0' else 'Ева'
+        second_parent = Player(tg_id=player.parents[1]).name if player.parents[1] != '0' else 'Адам'
         await m.answer('Имя: %s\nПол: %s\nВозраст: %s\nРодители: %s, %s\n' %
                        (player.name, player.gender, player.age, parent, second_parent))

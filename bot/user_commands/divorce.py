@@ -16,7 +16,7 @@ class Divorce(Command):
             await m.answer('В этой стране ты не в браке')
             return
 
-        second_player = Player(model_id=partner)
+        second_player = Player(tg_id=partner)
         await player.divorce(m.chat.id, second_player)
         await m.answer('<a href="tg://user?id=%s">%s</a> и <a href="tg://user?id=%s">%s</a> больше не вместе' %
                        (player.tg_id, player.name, second_player.tg_id, second_player.name))

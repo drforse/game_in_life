@@ -5,8 +5,9 @@ from aiogram import Dispatcher
 import logging
 
 from models import *
-from bot import user_commands
+from bot import user_commands, dev_commands
 from game.types import Player
+from config import *
 
 
 class AuthMiddlware(BaseMiddleware):
@@ -19,13 +20,22 @@ class AuthMiddlware(BaseMiddleware):
         command = data.get('command')
         command_found = False
         if command:
-            command = command.command
+            command_text = command.command
         else:
             return
 
-        for user_command in [value for key, value in user_commands.__dict__.items() if type(value) == type]:
-            if not command == user_command.__name__.lower():
-                continue
+        user_commands_dict = {value.__name__.lower(): value for key, value
+                              in user_commands.__dict__.items() if type(value) == type}
+        dev_commands_dict = {value.__name__.lower(): value for key, value
+                             in dev_commands.__dict__.items() if type(value) == type}
+        user_command = user_commands_dict.get(command_text)
+        dev_command = dev_commands_dict.get(command_text)
+        if not user_command and not dev_command:
+            return
+        elif dev_command:
+            if m.from_user.id not in DEVELOPERS:
+                raise CancelHandler
+        elif user_command:
             if user_command.needs_auth:
                 users_to_auth.append(m.from_user.id)
             if user_command.needs_reply_auth and m.reply_to_message:
@@ -33,11 +43,6 @@ class AuthMiddlware(BaseMiddleware):
             if user_command.needs_reply_auth and not m.reply_to_message:
                 await m.answer('Команда должна быть реплаем')
                 raise CancelHandler
-            command_found = True
-            break
-
-        if not command_found:
-            return
 
         for user in users_to_auth:
             player = Player(tg_id=user)

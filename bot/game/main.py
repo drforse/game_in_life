@@ -131,7 +131,12 @@ class Game:
                 break
         output = user.fuck(chat_tg_id, second_user, delay=random.randint(10, 120))
         async for out in output:
-            await bot.send_message(chat_tg_id, out)
+            if out['content_type'] == 'animation':
+                await bot.send_animation(chat_tg_id, out['content'])
+            elif out['content_type'] == 'text':
+                await bot.send_message(chat_tg_id, out['content'])
+            else:
+                raise ContentTypeUnexpected(out['content_type'])
         for u in [user, second_user]:
             await dp.current_state(chat=chat_tg_id, user=u.tg_id).finish()
             if second_user == user:
@@ -139,5 +144,10 @@ class Game:
 
 
 class CountryDoesntExistException(Exception):
+    def __init__(self, txt):
+        self.txt = txt
+
+
+class ContentTypeUnexpected(Exception):
     def __init__(self, txt):
         self.txt = txt

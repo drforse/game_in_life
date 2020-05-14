@@ -5,7 +5,7 @@ import datetime
 import logging
 import typing
 
-from config import game_speed
+from config import GAME_SPEED
 
 
 class MyDocument:
@@ -38,10 +38,10 @@ class User(Document, MyDocument):
         if self.age < 0 or self.age > 100:
             logging.info(f'update age of user {self.tg_id}: 0 > self.age {self.age} > 100')
             return
-        creation_date = self.pk.generation_time
+        creation_date = self.id.generation_time
         now = datetime.datetime.now(tz=creation_date.tzinfo)
         delta = now - creation_date
-        age = int(delta.total_seconds() / game_speed)
+        age = int(delta.total_seconds() / GAME_SPEED)
         age = age if age < 101 else 101
         if self.age >= age:
             logging.info(f'update age of user {self.tg_id}: self.age {self.age} >= age {age}')
@@ -53,11 +53,11 @@ class User(Document, MyDocument):
             logging.info(f'update age of user {self.tg_id}: died now')
             return 'died_now'
 
-    def push_child(self, chat, child):
+    def push_child(self, chat, child: int):
         self.update(__raw__={'$push': {f'childs.{chat}': child}})
         self.save()
 
-    def set_partner(self, chat, partner):
+    def set_partner(self, chat, partner: int):
         self.update(__raw__={'$set': {f'partners.{chat}': partner}})
         self.save()
 
@@ -65,7 +65,7 @@ class User(Document, MyDocument):
         self.update(__raw__={'$unset': {f'partners.{chat}': {'$exists': True}}})
         self.save()
 
-    def set_lover(self, chat, lover):
+    def set_lover(self, chat, lover: int):
         self.update(__raw__={'$set': {f'lovers.{chat}': lover}})
         self.save()
 
@@ -79,5 +79,33 @@ class Group(Document, MyDocument):
     name = StringField(required=True)
 
 
+class SexGifs(Document, MyDocument):
+    type = StringField(max_length=15, required=True, unique=True)  # hetero, lesbian, gay, masturbate, universal
+    gif_ids = ListField(required=True)
+
+    @classmethod
+    def push_gif(cls, sex_type: str, gif_id: str):
+        model = cls.get(type=sex_type)
+        if not model:
+            cls(type=sex_type, gif_ids=[gif_id]).save()
+            return
+        model.update(push__gif_ids=gif_id)
+
+
+class CumSexGifs(Document, MyDocument):
+    type = StringField(max_length=50, required=True, unique=True)  # hetero, lesbian, gay, masturbate, universal
+    gif_ids = ListField(required=True)
+
+    @classmethod
+    def push_gif(cls, sex_type: str, gif_id: str):
+        model = cls.get(type=sex_type)
+        if not model:
+            cls(type=sex_type, gif_ids=[gif_id]).save()
+            return
+        model.update(push__gif_ids=gif_id)
+
+
 __all__ = ['User',
-           'Group']
+           'Group',
+           'SexGifs',
+           'CumSexGifs']

@@ -1,5 +1,6 @@
 from .game import Game, CreatePlayerForm
 from .user_commands import *
+from .dev_commands import *
 from .core import Command
 
 
@@ -29,3 +30,7 @@ def register_handlers():
     Date.reg_callback(Date.decline_dating, lambda c: c.data.startswith('dating decline '))
 
     Breakup.register(commands=['breakup'])
+
+    AddSexGif.register(commands=['addsexgif'])
+
+    AddCumSexGif.register(commands=['addcumsexgif'])

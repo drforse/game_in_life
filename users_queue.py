@@ -4,7 +4,7 @@ import logging
 
 from models import *
 from bot.game import Game
-from config import bot, game_speed
+from config import bot, GAME_SPEED
 
 
 class Queue:
@@ -27,7 +27,7 @@ class Queue:
                     asyncio.get_event_loop().run_until_complete(Game.process_died_user(bot, user))
             end = time.time()
             try:
-                time.sleep(game_speed - (end - init))
+                time.sleep(GAME_SPEED - (end - init))
             except ValueError:
                 pass
 
