@@ -10,9 +10,6 @@ class Fuck(Command):
 
     @classmethod
     async def execute(cls, m: Message):
-        current_state = await (cls.dp.current_state(chat=m.chat.id, user=m.from_user.id)).get_state()
-        if current_state:
-            await m.answer('Вообще-то сейчас ты занят делом :3')
 
         player = Player(tg_id=m.from_user.id)
         if m.from_user.id != m.reply_to_message.from_user.id:

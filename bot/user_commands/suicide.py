@@ -21,5 +21,5 @@ class Suicide(Command):
                            'Напиши мне /start в личку, чтобы начать играть :3')
             return
 
-        await m.answer('Прощай... 🕯')
         await Game.process_died_user(m.bot, player)
+        await m.answer('Прощай... 🕯')

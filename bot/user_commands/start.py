@@ -67,5 +67,5 @@ class Start(Command):
             return
 
         country = await Country(chat_tg_id=m.chat.id).create(name=m.html_text)
-        await m.answer('Страна с названием %s успешно основана.' % country.name)
         await state.finish()
+        await m.answer('Страна с названием %s успешно основана.' % country.name)

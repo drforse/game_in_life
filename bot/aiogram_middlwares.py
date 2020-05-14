@@ -18,7 +18,6 @@ class AuthMiddlware(BaseMiddleware):
     async def on_process_message(self, m: Message, data: dict = None):
         users_to_auth = []
         command = data.get('command')
-        command_found = False
         if command:
             command_text = command.command
         else:
@@ -41,19 +40,28 @@ class AuthMiddlware(BaseMiddleware):
             if user_command.needs_reply_auth and m.reply_to_message:
                 users_to_auth.append(m.reply_to_message.from_user.id)
             if user_command.needs_reply_auth and not m.reply_to_message:
-                await m.answer('Команда должна быть реплаем')
+                try:
+                    await m.answer('Команда должна быть реплаем')
+                except:
+                    pass
                 raise CancelHandler
 
         for user in users_to_auth:
             player = Player(tg_id=user)
             member = await m.bot.get_chat_member(m.chat.id, user)
             if not player.exists:
-                await m.answer('<a href="tg://user?id=%s">%s</a> не играет.' %
-                               (player.tg_id, member.user.first_name or member.user.last_name))
+                try:
+                    await m.answer('<a href="tg://user?id=%s">%s</a> не играет.' %
+                                   (player.tg_id, member.user.first_name or member.user.last_name))
+                except:
+                    pass
                 raise CancelHandler
             if not player.alive:
-                await m.answer('<a href="tg://user?id=%s">%s</a> мёртв.' %
-                               (player.tg_id, member.user.first_name or member.user.last_name))
+                try:
+                    await m.answer('<a href="tg://user?id=%s">%s</a> мёртв.' %
+                                   (player.tg_id, member.user.first_name or member.user.last_name))
+                except:
+                    pass
                 raise CancelHandler
 
     async def on_process_callback_query(self, c: CallbackQuery, data: dict = None):

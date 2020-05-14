@@ -120,7 +120,10 @@ class Game:
             player = Player(model=player)
         output = await player.die()
         for msg in output:
-            await bot.send_message(msg, output[msg])
+            try:
+                await bot.send_message(msg, output[msg])
+            except:
+                pass
 
     @classmethod
     async def process_fuck(cls, dp: Dispatcher, bot: Bot, chat_tg_id: int, user: Player, second_user: Player):
@@ -132,9 +135,15 @@ class Game:
         output = user.fuck(chat_tg_id, second_user, delay=random.randint(10, 120))
         async for out in output:
             if out['content_type'] == 'animation':
-                await bot.send_animation(chat_tg_id, out['content'])
+                try:
+                    await bot.send_animation(chat_tg_id, out['content'])
+                except:
+                    pass
             elif out['content_type'] == 'text':
-                await bot.send_message(chat_tg_id, out['content'])
+                try:
+                    await bot.send_message(chat_tg_id, out['content'])
+                except:
+                    pass
             else:
                 raise ContentTypeUnexpected(out['content_type'])
         for u in [user, second_user]:
