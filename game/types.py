@@ -81,7 +81,7 @@ class Player:
                      delay: int = 300, custom_data: str = None, **kwargs) -> typing.AsyncGenerator:
         partner = await self.resolve_user(partner, 'Player')
         if action == 'fuck':
-            return self.fuck(chat_id, partner, delay)
+            return self.fuck(chat_id, partner, delay, custom_data, **kwargs)
         if action == 'dating':
             return self.date(chat_id, partner.tg_id)
         if action == 'marriage':
@@ -271,8 +271,17 @@ class Player:
         self.model.unset_lover(chat_tg_id)
         lover_model.unset_lover(chat_tg_id)
 
-    async def fuck(self, chat_id, partner: Player, delay: int = 300):
-        if self.tg_id == partner.tg_id:
+    async def fuck(self, chat_id, partner: Player, delay: int = 300, custom_data: str = None, **kwargs):
+        custom_messages = []
+        custom_delays = {}
+        if custom_data:
+            custom_data = await self.parse_data_for_custom_action(custom_data)
+            custom_messages = custom_data['messages']
+            custom_delays = custom_data['delays']
+            start_message = custom_messages[0].format(**kwargs)
+            end_message = custom_messages[-1]
+            delay = custom_delays[0]
+        elif self.tg_id == partner.tg_id:
             verb_form = 'кончил' if self.gender == 'male' else 'кончила' if self.gender == 'female' else 'кончил(а)'
             start_message = '<a href="tg://user?id=%d">%s</a> дрочит.' % (self.tg_id, self.name)
             end_message = '<a href="tg://user?id=%d">%s</a> %s.' % (self.tg_id, self.name, verb_form)
@@ -291,6 +300,10 @@ class Player:
         if possible_gifs:
             yield {'content_type': 'animation', 'content': random.choice(possible_gifs)}
         await asyncio.sleep(delay)
+        for num, message in enumerate(custom_messages[1:-1]):
+            yield {'content_type': 'text', 'content': message.format(**kwargs)}
+            if custom_delays.get(num+1):
+                await asyncio.sleep(custom_delays[num+1])
 
         child = await self.get_child_and_parents(chat_id, partner)
         if child['child']:
