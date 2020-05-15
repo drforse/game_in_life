@@ -17,6 +17,8 @@ def register_handlers():
     BaseAction.reg_callback(BaseAction.accept_action, lambda c: re.match('action .* accept ', c.data))
     BaseAction.reg_callback(BaseAction.decline_action, lambda c: re.match('action .* decline ', c.data))
 
+    Action.register(commands=['action'])
+
     Marry.register(commands=['marry'])
 
     Fuck.register(commands=['fuck'])

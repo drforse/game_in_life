@@ -128,15 +128,19 @@ class Game:
 
     @classmethod
     async def process_accepted_action(cls, action: str, dp: Dispatcher, bot: Bot,
-                                      chat_tg_id: int, user: Player, second_user: Player):
+                                      chat_tg_id: int, user: Player, second_user: Player, custom_data):
         for u in [user, second_user]:
             current_state = dp.current_state(chat=chat_tg_id, user=u.tg_id)
             await current_state.set_state(FuckForm.fucking)
             if second_user == user:
                 break
+        me = f'<a href="tg://{user.tg_id}">{user.name}</a>'
+        reply = f'<a href="tg://{second_user.tg_id}">{second_user.name}</a>'
         output = await user.action(action, chat_tg_id, second_user,
                                    delay=random.randint(SEX_DELAY_INTERVAL[0],
-                                                        SEX_DELAY_INTERVAL[1]))
+                                                        SEX_DELAY_INTERVAL[1]),
+                                   custom_data=custom_data.get('messages_and_delays'),
+                                   me=me, reply=reply)
         async for out in output:
             if out['content_type'] == 'animation':
                 try:
@@ -157,7 +161,7 @@ class Game:
 
     @classmethod
     async def process_declined_action(cls, action: str, callback_query,
-                                      player: Player, second_player: Player):
+                                      player: Player, second_player: Player, custom_data=None):
         callback_answer = ''
         edit_text = ''
         verb_form = ('отказала' if second_player.gender == 'male' else 'отказал'
@@ -173,37 +177,13 @@ class Game:
             callback_answer = 'А жаль...'
             edit_text = ('<a href="tg://user?id=%d">%s</a> {} в романтических '
                          'отношениях <a href="tg://user?id=%d">%s</a>'.format(verb_form))
+        elif action == 'custom' and custom_data:
+            edit_text = ('<a href="tg://user?id=%d">%s</a> не хочет {} с '
+                         '<a href="tg://user?id=%d">%s</a>'.format(custom_data['action']))
 
         edit_text = edit_text % (second_player.tg_id, second_player.name, player.tg_id, player.name)
         await callback_query.answer(callback_answer)
         await callback_query.message.edit_text(edit_text, reply_markup=None)
-
-
-    # @classmethod
-    # async def process_fuck(cls, dp: Dispatcher, bot: Bot, chat_tg_id: int, user: Player, second_user: Player):
-    #     for u in [user, second_user]:
-    #         current_state = dp.current_state(chat=chat_tg_id, user=u.tg_id)
-    #         await current_state.set_state(FuckForm.fucking)
-    #         if second_user == user:
-    #             break
-    #     output = user.fuck(chat_tg_id, second_user, delay=random.randint(10, 120))
-    #     async for out in output:
-    #         if out['content_type'] == 'animation':
-    #             try:
-    #                 await bot.send_animation(chat_tg_id, out['content'])
-    #             except:
-    #                 pass
-    #         elif out['content_type'] == 'text':
-    #             try:
-    #                 await bot.send_message(chat_tg_id, out['content'])
-    #             except:
-    #                 pass
-    #         else:
-    #             raise ContentTypeUnexpected(out['content_type'])
-    #     for u in [user, second_user]:
-    #         await dp.current_state(chat=chat_tg_id, user=u.tg_id).finish()
-    #         if second_user == user:
-    #             break
 
 
 class CountryDoesntExistException(Exception):

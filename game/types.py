@@ -77,6 +77,56 @@ class Player:
     async def join_chat(self, chat_tg_id):
         self.model.update(push__chats=chat_tg_id)
 
+    async def action(self, action: str, chat_id: int, partner: typing.Union[User, Player, int],
+                     delay: int = 300, custom_data: str = None, **kwargs) -> typing.AsyncGenerator:
+        partner = await self.resolve_user(partner, 'Player')
+        if action == 'fuck':
+            return self.fuck(chat_id, partner, delay)
+        if action == 'dating':
+            return self.date(chat_id, partner.tg_id)
+        if action == 'marriage':
+            return self.marry(chat_id, partner.tg_id)
+        if action == 'custom':
+            custom_data = await self.parse_data_for_custom_action(custom_data)
+            return self.custom_action(custom_data['messages'], custom_data['delays'], **kwargs)
+
+    @staticmethod
+    async def parse_data_for_custom_action(custom_data: str):
+        dt = custom_data.split('|')
+        messages = [msg.strip() for msg in dt[0::2]]
+        delays = [int(delay) for delay in dt[1::2]]
+        delays_dict = {}
+        for num, delay in enumerate(delays):
+            if delay > 0:
+                delays_dict[num] = delay
+        return {'messages': messages, 'delays': delays_dict}
+
+    @staticmethod
+    async def custom_action(messages: typing.List[str],
+                            delays: dict = None,
+                            **kwargs) -> typing.AsyncGenerator:
+        """
+
+        :param messages:
+        :param delays: {message_index: delay_in_seconds}  # message_index == index of message after which make delay
+        :param kwargs: variables for messages to format messages using .format()
+        :return:
+        """
+        for num, message in enumerate(messages):
+            yield {'content_type': 'text', 'content': message.format(**kwargs)}
+            if delays.get(num):
+                await asyncio.sleep(delays[num])
+
+    async def born(self, mother: Player, father: Player, chat: typing.Union[Country, int]):
+        if isinstance(chat, Country):
+            chat = Group.chat_tg_id
+        self.model.delete()
+        child = Player(tg_id=self.tg_id)
+        child = await child.create(name=self.name, gender=self.gender, age=0,
+                                   chats=self.chats, parents=[mother.tg_id, father.tg_id])
+        mother.model.push_child(chat, child.tg_id)
+        father.model.push_child(chat, child.tg_id)
+
     async def die(self, update_from_db=False):
         if update_from_db:
             self.update_from_db()
@@ -138,8 +188,8 @@ class Player:
         if not can_marry['result']:
             yield {'content_type': 'text', 'content': self.cant_marry_reason_exaplanation[can_marry['reason']]}
 
-        self.model.set_partner(chat_tg_id, partner.tg_id)  # update(__raw__={'$set': {f'partners.{chat_tg_id}': partner.tg_id}})
-        partner.model.set_partner(chat_tg_id, self.tg_id)  # update(__raw__={'$set': {f'partners.{chat_tg_id}': self.tg_id}})
+        self.model.set_partner(chat_tg_id, partner.tg_id)
+        partner.model.set_partner(chat_tg_id, self.tg_id)
         self.model.unset_lover(chat_tg_id)
         partner.model.unset_lover(chat_tg_id)
         text = ('Поздавляем <a href="tg://user?id=%d">%s</a> и <a href="tg://user?id=%d">%s</a> со свадьбой' %
@@ -153,8 +203,8 @@ class Player:
         if not can_date['result']:
             yield {'content_type': 'text', 'content': self.cant_date_reason_exaplanation[can_date['reason']]}
 
-        self.model.set_lover(chat_tg_id, lover.tg_id)  # update(__raw__={'$set': {f'lovers.{chat_tg_id}': lover.tg_id}})
-        lover.model.set_lover(chat_tg_id, self.tg_id)  # update(__raw__={'$set': {f'lovers.{chat_tg_id}': self.tg_id}})
+        self.model.set_lover(chat_tg_id, lover.tg_id)
+        lover.model.set_lover(chat_tg_id, self.tg_id)
         text = ('<a href="tg://user?id=%d">%s</a> и <a href="tg://user?id=%d">%s</a> теперь встречаются' %
                 (self.tg_id, self.name, lover.tg_id, lover.name))
         yield {'content_type': 'text', 'content': text}
@@ -221,22 +271,8 @@ class Player:
         self.model.unset_lover(chat_tg_id)
         lover_model.unset_lover(chat_tg_id)
 
-    async def action(self, action: str, chat_id: int, partner: typing.Union[User, Player, int],
-                     delay: int = 300) -> typing.AsyncGenerator:
-        partner = await self.resolve_user(partner, 'Player')
-        if action == 'fuck':
-            return self.fuck(chat_id, partner, delay)
-        if action == 'dating':
-            return self.date(chat_id, partner.tg_id)
-        if action == 'marriage':
-            return self.marry(chat_id, partner.tg_id)
-
     async def fuck(self, chat_id, partner: Player, delay: int = 300):
-        sex_types = await self.get_sex_types(partner)
-        sex_type = sex_types['main']
-        universal_sex_type = sex_types['universal']
-
-        if sex_type.startswith('masturbate'):
+        if self.tg_id == partner.tg_id:
             verb_form = 'кончил' if self.gender == 'male' else 'кончила' if self.gender == 'female' else 'кончил(а)'
             start_message = '<a href="tg://user?id=%d">%s</a> дрочит.' % (self.tg_id, self.name)
             end_message = '<a href="tg://user?id=%d">%s</a> %s.' % (self.tg_id, self.name, verb_form)
@@ -245,9 +281,11 @@ class Player:
                             (self.tg_id, self.name, partner.tg_id, partner.name)
             end_message = '<a href="tg://user?id=%d">%s</a> и <a href="tg://user?id=%d">%s</a> закончили трахаться' % \
                           (self.tg_id, self.name, partner.tg_id, partner.name)
-
         yield {'content_type': 'text', 'content': start_message}
 
+        sex_types = await self.get_sex_types(partner)
+        sex_type = sex_types['main']
+        universal_sex_type = sex_types['universal']
         possible_gifs = await self.get_possible_sex_gifs(sex_type, universal_sex_type)
 
         if possible_gifs:
@@ -329,16 +367,6 @@ class Player:
         for model in possible_gif_models:
             possible_gifs += [gifdict['file_id'] for gifdict in model.gif_ids]
         return possible_gifs
-
-    async def born(self, mother: Player, father: Player, chat: typing.Union[Country, int]):
-        if isinstance(chat, Country):
-            chat = Group.chat_tg_id
-        self.model.delete()
-        child = Player(tg_id=self.tg_id)
-        child = await child.create(name=self.name, gender=self.gender, age=0,
-                                   chats=self.chats, parents=[mother.tg_id, father.tg_id])
-        mother.model.push_child(chat, child.tg_id)
-        father.model.push_child(chat, child.tg_id)
 
     @staticmethod
     async def resolve_user(user: typing.Union[User, Player, int], result_type: str = 'Player'):
