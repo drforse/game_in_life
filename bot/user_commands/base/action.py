@@ -1,5 +1,4 @@
-from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
-from aiogram import exceptions as aio_exceptions
+from aiogram.types import Message, CallbackQuery
 
 from ...core import Command
 from ...game import Game
@@ -28,7 +27,7 @@ class BaseAction(Command):
 
         try:
             await msg.delete()
-        except aio_exceptions.MessageCantBeDeleted:
+        except:
             pass
         await Game.process_accepted_action(action, cls.dp, cls.bot, msg.chat.id, player, second_player, custom_data)
 
