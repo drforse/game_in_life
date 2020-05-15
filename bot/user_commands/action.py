@@ -14,6 +14,12 @@ class Action(BaseAction):
                            'Пример: /action сходить в кафе | {me} и {reply} пошли в кафе | 5 | {me} и {reply} пьют '
                            'кофе | 0 | {me} обняла {reply} и они разошлись по домам')
             return
+
+        try:
+            await m.delete()
+        except:
+            pass
+
         player = Player(tg_id=m.from_user.id)
         if m.from_user.id != m.reply_to_message.from_user.id:
             second_player = Player(tg_id=m.reply_to_message.from_user.id)

@@ -16,6 +16,11 @@ class Fuck(BaseAction):
             await cls.accept_action(data=f'action fuck accept {player.tg_id} {player.tg_id}', message=m)
             return
 
+        try:
+            await m.delete()
+        except:
+            pass
+
         kb = InlineKeyboardMarkup()
         accept = InlineKeyboardButton('Секс', callback_data=f'action fuck accept {player.tg_id} {second_player.tg_id}')
         decline = InlineKeyboardButton('Нах', callback_data=f'action fuck decline {player.tg_id} {second_player.tg_id}')

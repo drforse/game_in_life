@@ -17,6 +17,11 @@ class Marry(BaseAction):
             await m.answer(player.cant_marry_reason_exaplanation[can_marry['reason']])
             return
 
+        try:
+            await m.delete()
+        except:
+            pass
+
         kb = InlineKeyboardMarkup()
         accept = InlineKeyboardButton('Принять', callback_data=f'action marriage accept {player.tg_id} {partner_player.tg_id}')
         decline = InlineKeyboardButton('Отклонить',

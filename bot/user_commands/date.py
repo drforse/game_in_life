@@ -17,6 +17,11 @@ class Date(BaseAction):
             await m.answer(player.cant_date_reason_exaplanation[can_date['reason']])
             return
 
+        try:
+            await m.delete()
+        except:
+            pass
+
         kb = InlineKeyboardMarkup()
         accept = InlineKeyboardButton('Принять', callback_data=f'action dating accept {player.tg_id} {lover_player.tg_id}')
         decline = InlineKeyboardButton('Отклонить',

@@ -16,6 +16,10 @@ class Breakup(Command):
             await m.answer('В этой стране ты не состоишь в романтических отношениях')
             return
 
+        try:
+            await m.delete()
+        except:
+            pass
         lover_player = Player(tg_id=lover)
         await player.break_up(m.chat.id, lover_player)
         await m.answer('<a href="tg://user?id=%s">%s</a> и <a href="tg://user?id=%s">%s</a> больше не вместе' %
