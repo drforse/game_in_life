@@ -21,6 +21,7 @@ class BaseAction(Command):
 
         msg = message or c.message
 
+        custom_data = {}
         if action == 'custom':
             async with cls.dp.current_state(chat=msg.chat.id, user=user).proxy() as dt:
                 custom_data = dt
@@ -39,7 +40,8 @@ class BaseAction(Command):
         action = data[1]
         player = Player(tg_id=user)
         second_player = Player(tg_id=second_user)
-        custom_data = None
+
+        custom_data = {}
         if action == 'custom':
             async with cls.dp.current_state(chat=c.message.chat.id, user=user).proxy() as dt:
                 custom_data = dt
