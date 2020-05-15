@@ -134,8 +134,8 @@ class Game:
             await current_state.set_state(FuckForm.fucking)
             if second_user == user:
                 break
-        me = f'<a href="tg://{user.tg_id}">{user.name}</a>'
-        reply = f'<a href="tg://{second_user.tg_id}">{second_user.name}</a>'
+        me = f'<a href="tg://user?id={user.tg_id}">{user.name}</a>'
+        reply = f'<a href="tg://user?id={second_user.tg_id}">{second_user.name}</a>'
         output = await user.action(action, chat_tg_id, second_user,
                                    delay=random.randint(SEX_DELAY_INTERVAL[0],
                                                         SEX_DELAY_INTERVAL[1]),
