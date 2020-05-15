@@ -279,7 +279,7 @@ class Player:
             custom_messages = custom_data['messages']
             custom_delays = custom_data['delays']
             start_message = custom_messages[0].format(**kwargs)
-            end_message = custom_messages[-1]
+            end_message = custom_messages[-1].format(**kwargs)
             delay = custom_delays[0]
         elif self.tg_id == partner.tg_id:
             verb_form = 'кончил' if self.gender == 'male' else 'кончила' if self.gender == 'female' else 'кончил(а)'
