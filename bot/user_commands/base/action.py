@@ -20,11 +20,12 @@ class BaseAction(Command):
         player = Player(tg_id=user)
         second_player = Player(tg_id=second_user) if user != second_user else player
 
+        msg = message or c.message
+
         if action == 'custom':
-            async with cls.dp.current_state(chat=c.message.chat.id, user=user).proxy() as dt:
+            async with cls.dp.current_state(chat=msg.chat.id, user=user).proxy() as dt:
                 custom_data = dt
 
-        msg = message or c.message
         try:
             await msg.delete()
         except aio_exceptions.MessageCantBeDeleted:
