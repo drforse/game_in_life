@@ -7,6 +7,7 @@ from game.types import Player
 
 
 class BaseAction(Command):
+    custom_action_pattern = r'/action(@.+)? .+(\|.+\| *([1-9][0-9]*)|0)+ *\|.+$'
 
     @classmethod
     async def base_execute(cls, m: Message):
@@ -20,7 +21,7 @@ class BaseAction(Command):
         if 'type:' in action:
             action_type = action.split('type:')[1].split()[0]
             action = action.replace(f'type:{action_type} ', '')
-        if re.match(r'/.+(@.+)? .+ (\| .+ \| [1-9][0-9]*)+ \| .+$', m.text):
+        if re.match(cls.custom_action_pattern, m.text):
             async with cls.dp.current_state(chat=m.chat.id, user=m.from_user.id).proxy() as dt:
                 dt['action'] = action
                 print(m.text.split('|', maxsplit=1)[1].strip())

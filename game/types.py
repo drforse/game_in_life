@@ -280,7 +280,7 @@ class Player:
             custom_delays = custom_data['delays']
             start_message = custom_messages[0].format(**kwargs)
             end_message = custom_messages[-1].format(**kwargs)
-            delay = custom_delays[0]
+            delay = custom_delays.get(0)
         elif self.tg_id == partner.tg_id:
             verb_form = 'кончил' if self.gender == 'male' else 'кончила' if self.gender == 'female' else 'кончил(а)'
             start_message = '<a href="tg://user?id=%d">%s</a> дрочит.' % (self.tg_id, self.name)
@@ -299,7 +299,8 @@ class Player:
 
         if possible_gifs:
             yield {'content_type': 'animation', 'content': random.choice(possible_gifs)}
-        await asyncio.sleep(delay)
+        if delay:
+            await asyncio.sleep(delay)
         for num, message in enumerate(custom_messages[1:-1]):
             yield {'content_type': 'text', 'content': message.format(**kwargs)}
             if custom_delays.get(num+1):

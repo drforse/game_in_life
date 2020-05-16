@@ -8,7 +8,7 @@ class Action(BaseAction):
 
     @classmethod
     async def execute(cls, m: Message):
-        if not re.match(r'/action(@.+)? .+ (\| .+ \| [1-9][0-9]*)+ \| .+$', m.text):
+        if not re.match(cls.custom_action_pattern, m.text):
             await m.answer('Команда не следует шаблону "/action действие | сообщение | ожидание | сообщение..."\n'
                            'Пример: /action сходить в кафе | {me} и {reply} пошли в кафе | 5 | {me} и {reply} пьют '
                            'кофе | 0 | {me} обняла {reply} и они разошлись по домам\n'
