@@ -92,6 +92,8 @@ class Player:
 
     @staticmethod
     async def parse_data_for_custom_action(custom_data: str):
+        if not custom_data:
+            return {'messages': [], 'delays': {}}
         dt = custom_data.split('|')
         messages = [msg.strip() for msg in dt[0::2]]
         delays = [int(delay) for delay in dt[1::2]]
@@ -112,6 +114,8 @@ class Player:
         :param kwargs: variables for messages to format messages using .format()
         :return:
         """
+        if not messages:
+            yield {'content_type': 'error', 'content': 'NoCustomMessagesGiven'}
         for num, message in enumerate(messages):
             yield {'content_type': 'text', 'content': message.format(**kwargs)}
             if delays.get(num):

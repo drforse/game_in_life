@@ -152,6 +152,12 @@ class Game:
                     await bot.send_message(chat_tg_id, out['content'])
                 except:
                     pass
+            elif out['content_type'] == 'error' and out['content'] == 'NoCustomMessagesGiven':
+                try:
+                    await bot.send_message(chat_tg_id,
+                                           'Кастомные сообщения не были даны или предложение устарело')
+                except:
+                    pass
             else:
                 raise ContentTypeUnexpected(out['content_type'])
         for u in [user, second_user]:
@@ -180,6 +186,10 @@ class Game:
         elif action == 'custom' and custom_data:
             edit_text = ('<a href="tg://user?id=%d">%s</a> не хочет {} с '
                          '<a href="tg://user?id=%d">%s</a>'.format(custom_data['action']))
+        elif action == 'custom':
+            edit_text = 'Кастомные сообщения не были даны или предложение устарело'
+            await callback_query.message.edit_text(edit_text, reply_markup=None)
+            return
 
         edit_text = edit_text % (second_player.tg_id, second_player.name, player.tg_id, player.name)
         await callback_query.answer(callback_answer)
