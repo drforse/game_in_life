@@ -16,6 +16,10 @@ class BaseAction(Command):
         except:
             pass
 
+        if 'xbet' in m.text.lower():
+            await m.answer('Идите нахуй со своим 1xbet, забаню щас блять')
+            return
+
         action = m.text.split('|')[0].split(maxsplit=1)[1].strip()
         action_type = 'custom'
         if 'type:' in action:
