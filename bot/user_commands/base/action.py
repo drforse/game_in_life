@@ -7,7 +7,7 @@ from game.types import Player
 
 
 class BaseAction(Command):
-    custom_action_pattern = r'/action(@.+)? [^\|]+(\|[^\|]+\| *([1-9][0-9]*)|0)+ *\|.+$'
+    custom_action_pattern = r'/action(@.+)? [^\|]+(\|[^\|]+\| *([1-9][0-9]*|0) *)+ *\|.+'
 
     @classmethod
     async def base_execute(cls, m: Message):
