@@ -8,7 +8,7 @@ class Me(Command):
     needs_reply_auth = False
 
     @classmethod
-    async def execute(cls, m: Message):
+    async def execute(cls, m: Message, state=None):
         if m.chat.type == 'private':
             await cls.execute_in_private(m)
             return

@@ -27,7 +27,7 @@ def register_handlers():
 
     Divorce.register(commands=['divorce'])
 
-    Me.register(commands=['me'])
+    Me.register(commands=['me'], state='*')
 
     Date.register(commands=['date'])
 
