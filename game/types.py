@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import re
 import random
 import typing
 import asyncio
@@ -116,7 +117,6 @@ class Player:
         if not messages:
             yield {'content_type': 'error', 'content': 'NoCustomMessagesGiven'}
         for num, message in enumerate(messages):
-            import re
             msg = re.sub(r'{(?!me)(?!reply)[^}]*}',
                          lambda m: m.group(0).replace('{', '{{').replace('}', '}}'),
                          message)
