@@ -117,14 +117,8 @@ class Player:
         if not messages:
             yield {'content_type': 'error', 'content': 'NoCustomMessagesGiven'}
         for num, message in enumerate(messages):
-            msg = re.sub(r'{(?!me)(?!reply)[^}]*}',
-                         lambda m: m.group(0).replace('{', '{{').replace('}', '}}'),
-                         message)
-            try:
-                yield {'content_type': 'text', 'content': msg.format(**kwargs)}
-            except ValueError:
-                yield {'content_type': 'error', 'content': 'FormatValueError'}
-                break
+            msg = message.replace('{me}', kwargs.get('me')).replace('{reply}', kwargs.get('reply'))
+            yield {'content_type': 'text', 'content': msg}
             if delays.get(num):
                 await asyncio.sleep(delays[num])
 
@@ -289,8 +283,8 @@ class Player:
             custom_data = await self.parse_data_for_custom_action(custom_data)
             custom_messages = custom_data['messages']
             custom_delays = custom_data['delays']
-            start_message = custom_messages[0].format(**kwargs)
-            end_message = custom_messages[-1].format(**kwargs)
+            start_message = custom_messages[0].replace('{me}', kwargs.get('me')).replace('{reply}', kwargs.get('reply'))
+            end_message = custom_messages[-1].replace('{me}', kwargs.get('me')).replace('{reply}', kwargs.get('reply'))
             delay = custom_delays.get(0)
         elif self.tg_id == partner.tg_id:
             verb_form = 'кончил' if self.gender == 'male' else 'кончила' if self.gender == 'female' else 'кончил(а)'
@@ -313,7 +307,8 @@ class Player:
         if delay:
             await asyncio.sleep(delay)
         for num, message in enumerate(custom_messages[1:-1]):
-            yield {'content_type': 'text', 'content': message.format(**kwargs)}
+            msg = message.replace('{me}', kwargs.get('me')).replace('{reply}', kwargs.get('reply'))
+            yield {'content_type': 'text', 'content': message}
             if custom_delays.get(num+1):
                 await asyncio.sleep(custom_delays[num+1])
 
