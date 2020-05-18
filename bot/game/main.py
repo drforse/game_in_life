@@ -158,16 +158,6 @@ class Game:
                                            'Кастомные сообщения не были даны или предложение устарело')
                 except:
                     pass
-            elif out['content_type'] == 'error' and out['content'] == 'FormatValueError':
-                text = ('Произошла ошибка, убедитесь, что в тексте нет одиночных { и/или }, '
-                        'не использующихся для переменных (чтобы использовать их не для переменных, '
-                        'их надо удвоить, например:\n'
-                        '{me} печатает {{\n'
-                        'в итоге это превратится в: "вашеимя печатает {"')
-                try:
-                    await bot.send_message(chat_tg_id, text)
-                except:
-                    pass
             else:
                 raise ContentTypeUnexpected(out['content_type'])
         for u in [user, second_user]:
