@@ -116,7 +116,15 @@ class Player:
         if not messages:
             yield {'content_type': 'error', 'content': 'NoCustomMessagesGiven'}
         for num, message in enumerate(messages):
-            yield {'content_type': 'text', 'content': message.format(**kwargs)}
+            import re
+            msg = re.sub(r'{(?!me)(?!reply)[^}]*}',
+                         lambda m: m.group(0).replace('{', '{{').replace('}', '}}'),
+                         message)
+            try:
+                yield {'content_type': 'text', 'content': msg.format(**kwargs)}
+            except ValueError:
+                yield {'content_type': 'error', 'content': 'FormatValueError'}
+                break
             if delays.get(num):
                 await asyncio.sleep(delays[num])
 
