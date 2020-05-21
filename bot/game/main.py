@@ -170,8 +170,8 @@ class Game:
                                       player: Player, second_player: Player, custom_data=None):
         callback_answer = ''
         edit_text = ''
-        verb_form = ('отказала' if second_player.gender == 'male' else 'отказал'
-                                if second_player.gender == 'female' else 'отказал(а)')
+        verb_form = ('отказал' if second_player.gender == 'male' else 'отказала'
+                               if second_player.gender == 'female' else 'отказал(а)')
         if action == 'fuck':
             callback_answer = 'Блин, а я уже камеру приготовил (9(('
             edit_text = '<a href="tg://user?id=%d">%s</a> не хочет ебаться с <a href="tg://user?id=%d">%s</a>'
