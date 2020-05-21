@@ -140,6 +140,7 @@ class Player:
         logging.info(f'process died user {self.tg_id}')
 
         output = await self.notify_partners_about_death()
+        output.update(await self.notify_lovers_about_death())
         output.update((await self.notify_childs_about_death()))
         output.update((await self.notify_parents_about_death()))
 
@@ -152,6 +153,18 @@ class Player:
         for chat in self.partners:
             partner_player = Player(tg_id=self.partners[chat])
             await partner_player.divorce(chat, partner_player)
+            if not partner_player.alive:
+                continue
+            country = Country(chat_tg_id=int(chat))
+            logging.info(f'process died user {self.tg_id}: notify partner {partner_player.tg_id}')
+            output[partner_player.tg_id] = 'Ваш партнер в стране %s, %s - умер...' % (country.name, self.name)
+        return output
+
+    async def notify_lovers_about_death(self) -> dict:
+        output = {}
+        for chat in self.partners:
+            partner_player = Player(tg_id=self.partners[chat])
+            await partner_player.break_up(chat, partner_player)
             if not partner_player.alive:
                 continue
             country = Country(chat_tg_id=int(chat))
