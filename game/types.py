@@ -162,14 +162,14 @@ class Player:
 
     async def notify_lovers_about_death(self) -> dict:
         output = {}
-        for chat in self.partners:
-            partner_player = Player(tg_id=self.partners[chat])
-            await partner_player.break_up(chat, partner_player)
-            if not partner_player.alive:
+        for chat in self.lovers:
+            lover_player = Player(tg_id=self.partners[chat])
+            await lover_player.break_up(chat, lover_player)
+            if not lover_player.alive:
                 continue
             country = Country(chat_tg_id=int(chat))
-            logging.info(f'process died user {self.tg_id}: notify partner {partner_player.tg_id}')
-            output[partner_player.tg_id] = 'Ваш партнер в стране %s, %s - умер...' % (country.name, self.name)
+            logging.info(f'process died user {self.tg_id}: notify lover {lover_player.tg_id}')
+            output[lover_player.tg_id] = 'Ваша вторая половинка в стране %s, %s - умер...' % (country.name, self.name)
         return output
 
     async def notify_childs_about_death(self) -> dict:
