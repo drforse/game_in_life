@@ -32,11 +32,16 @@ class Me(Command):
 
         emojis = player.gender_emoji_reference
         text = 'Имя: %s %s\nВозраст: %s\nРодители: ' % (player.name, emojis[player.gender], player.age)
-        for p in (parent, second_parent):
+
+        parents = (parent, second_parent)
+        for num, p in enumerate(parents):
             text += f'{p.name} {emojis[p.gender]}'
             if not p.alive:
                 text += ' 🕯'
-            text += ' | '
+            if num != len(parents) - 1:
+                text += ' | '
+            else:
+                text += '\n'
 
         if partner:
             if partner.gender == 'female':
@@ -61,7 +66,7 @@ class Me(Command):
         for child in childs:
             if not child.exists:
                 continue
-            text += '- %s' % child.name
+            text += '- %s %s' % (child.name,  emojis[child.gender])
             if not child.alive:
                 text += ' 🕯'
             text += '\n'
