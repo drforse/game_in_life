@@ -29,6 +29,8 @@ def register_handlers():
 
     Me.register(commands=['me'], state='*')
 
+    You.register(commands=['you'], state='*')
+
     Date.register(commands=['date'])
 
     Breakup.register(commands=['breakup'])
