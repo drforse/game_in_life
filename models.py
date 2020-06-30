@@ -1,9 +1,9 @@
-from __future__ import annotations
-
-from mongoengine import *
 import datetime
 import logging
 import typing
+
+from mongoengine import *
+from bson.objectid import ObjectId
 
 from config import GAME_SPEED
 
@@ -11,8 +11,13 @@ from config import GAME_SPEED
 class MyDocument:
 
     @classmethod
-    def get(cls, **kwargs) -> typing.Union[User, None]:
-        queryset_ = cls.objects(**kwargs)
+    def get(cls, **kwargs) -> typing.Union['User', None]:
+        """
+        get object or None
+        :param kwargs:
+        :return:
+        """
+        queryset_ = cls.objects(**kwargs).order_by('-id')
         if queryset_:
             return queryset_[0]
 
@@ -53,23 +58,23 @@ class User(Document, MyDocument):
             logging.info(f'update age of user {self.tg_id}: died now')
             return 'died_now'
 
-    def push_child(self, chat, child: int):
+    def push_child(self, chat: int, child: ObjectId):
         self.update(__raw__={'$push': {f'childs.{chat}': child}})
         self.save()
 
-    def set_partner(self, chat, partner: int):
+    def set_partner(self, chat: int, partner: ObjectId):
         self.update(__raw__={'$set': {f'partners.{chat}': partner}})
         self.save()
 
-    def unset_partner(self, chat):
+    def unset_partner(self, chat: int):
         self.update(__raw__={'$unset': {f'partners.{chat}': {'$exists': True}}})
         self.save()
 
-    def set_lover(self, chat, lover: int):
+    def set_lover(self, chat: int, lover: ObjectId):
         self.update(__raw__={'$set': {f'lovers.{chat}': lover}})
         self.save()
 
-    def unset_lover(self, chat):
+    def unset_lover(self, chat: int):
         self.update(__raw__={'$unset': {f'lovers.{chat}': {'$exists': True}}})
         self.save()
 
@@ -80,6 +85,8 @@ class Group(Document, MyDocument):
 
 
 class SexGifs(Document, MyDocument):
+    meta = {'allow_inheritance': True}
+
     type = StringField(required=True, unique=True)  # hetero, lesbian, gay, masturbate, universal
     gif_ids = ListField(required=True)
 
@@ -102,28 +109,31 @@ class SexGifs(Document, MyDocument):
                                     'file_unique_id': gif_unique_id})
 
 
-class CumSexGifs(Document, MyDocument):
-    type = StringField(required=True, unique=True)  # hetero, lesbian, gay, masturbate, universal
-    gif_ids = ListField(required=True)
-
-    @classmethod
-    def push_gif(cls, sex_type: str, gif_id: str, gif_unique_id: str):
-        model = cls.get(type=sex_type)
-        if not model:
-            cls(type=sex_type, gif_ids=[{'file_id': gif_id,
-                                         'file_unique_id': gif_unique_id}]).save()
-            return
-        model.update(push__gif_ids={'file_id': gif_id,
-                                    'file_unique_id': gif_unique_id})
-
-    @classmethod
-    def pull_gif(cls, sex_type: str, gif_unique_id: str):
-        print(sex_type, gif_unique_id)
-        model = cls.get(type=sex_type)
-        if not model:
-            return
-        model.update(pull__gif_ids={'file_id': {'$exists': True},
-                                    'file_unique_id': gif_unique_id})
+class CumSexGifs(SexGifs):
+    """
+    MongoEngine Document, same as SexGifs, but different collection
+    """
+    pass
+    # type = StringField(required=True, unique=True)  # hetero, lesbian, gay, masturbate, universal
+    # gif_ids = ListField(required=True)
+    #
+    # @classmethod
+    # def push_gif(cls, sex_type: str, gif_id: str, gif_unique_id: str):
+    #     model = cls.get(type=sex_type)
+    #     if not model:
+    #         cls(type=sex_type, gif_ids=[{'file_id': gif_id,
+    #                                      'file_unique_id': gif_unique_id}]).save()
+    #         return
+    #     model.update(push__gif_ids={'file_id': gif_id,
+    #                                 'file_unique_id': gif_unique_id})
+    #
+    # @classmethod
+    # def pull_gif(cls, sex_type: str, gif_unique_id: str):
+    #     model = cls.get(type=sex_type)
+    #     if not model:
+    #         return
+    #     model.update(pull__gif_ids={'file_id': {'$exists': True},
+    #                                 'file_unique_id': gif_unique_id})
 
 
 __all__ = ['User',

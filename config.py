@@ -4,7 +4,9 @@ from aiogram import Bot
 import os
 
 API_TOKEN = os.environ['bot_token']
+print(API_TOKEN)
 DB_URL = os.environ['game_in_life_db_url']
+print(DB_URL)
 
 storage = MemoryStorage()
 bot = Bot(API_TOKEN, parse_mode='html')

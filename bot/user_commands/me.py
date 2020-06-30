@@ -20,20 +20,24 @@ class Me(Command):
         lover = None
         childs = []
         if player.parents[0] != '0':
-            parent = Player(tg_id=player.parents[0])
+            parent = Player(model_id=player.parents[0])
         if player.parents[1] != '0':
-            second_parent = Player(tg_id=player.parents[1])
+            second_parent = Player(model_id=player.parents[1])
         if player.partners.get(str(m.chat.id)):
-            partner = Player(tg_id=player.partners[str(m.chat.id)])
+            partner = Player(model_id=player.partners[str(m.chat.id)])
         if player.lovers.get(str(m.chat.id)):
-            lover = Player(tg_id=player.lovers[str(m.chat.id)])
+            lover = Player(model_id=player.lovers[str(m.chat.id)])
         if player.childs.get(str(m.chat.id)):
-            childs = [Player(tg_id=child_id) for child_id in player.childs[str(m.chat.id)]]
+            childs = [Player(model_id=child_id) for child_id in player.childs[str(m.chat.id)]]
 
         emojis = player.gender_emoji_reference
-        text = ('Имя: %s %s\nВозраст: %s\nРодители: %s %s, %s %s\n' %
-                (player.name, emojis[player.gender], player.age,
-                 parent.name, emojis[parent.gender], second_parent.name, emojis[second_parent.gender]))
+        text = 'Имя: %s %s\nВозраст: %s\nРодители: ' % (player.name, emojis[player.gender], player.age)
+        for p in (parent, second_parent):
+            text += f'{p.name} {emojis[p.gender]}'
+            if not p.alive:
+                text += ' 🕯'
+            text += ' | '
+
         if partner:
             if partner.gender == 'female':
                 s = 'Жена: %s'
@@ -59,7 +63,7 @@ class Me(Command):
                 continue
             text += '- %s' % child.name
             if not child.alive:
-                text += '🕯'
+                text += ' 🕯'
             text += '\n'
 
         await m.answer(text)
@@ -75,6 +79,13 @@ class Me(Command):
         parent = Player(tg_id=player.parents[0]) if player.parents[0] != '0' else Eva
         second_parent = Player(tg_id=player.parents[1]) if player.parents[1] != '0' else Adam
         emojis = player.gender_emoji_reference
-        await m.answer('Имя: %s %s\nВозраст: %s\nРодители: %s %s, %s %s\n' %
-                       (player.name, emojis[player.gender], player.age,
-                        parent.name, emojis[parent.gender], second_parent.name, emojis[second_parent.gender]))
+        text = 'Имя: %s %s\nВозраст: %s\nРодители: ' % (player.name, emojis[player.gender], player.age)
+        parents = (parent, second_parent)
+        for num, p in enumerate(parents):
+            text += f'{p.name} {emojis[p.gender]}'
+            if not p.alive:
+                text += ' 🕯'
+            if num != len(parents) - 1:
+                text += ' | '
+
+        await m.answer(text)

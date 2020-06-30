@@ -64,8 +64,6 @@ class Game:
 
         user = User(tg_id=m.from_user.id, name=name, age=-1, gender=gender_reference[gender], chats=chats)
         user.save()
-        if old_user:
-            old_user.delete()
         text = 'Создан игрок с данными:\nИмя: %s\nПол: %s\nВозраст: 0\n' % (user.name, user.gender)
         if not await cls.get_users_availiable_for_children(user):
             text += 'Родители: Ева, Адам\n'
@@ -86,7 +84,8 @@ class Game:
         for chat in chats:
             females_in_marriage = []
             males_in_marriage = []
-            users_in_marriage = User.objects(__raw__={f'partners.{chat}': {'$exists': True}})
+            users_in_marriage = User.objects(__raw__={f'partners.{chat}': {'$exists': True},
+                                                      'age': {'$lte': 0, '$gte': 100}})
             print('users_in_marriage', [u.tg_id for u in users_in_marriage])
             for u in users_in_marriage:
                 if u.gender == 'female':

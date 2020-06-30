@@ -20,7 +20,7 @@ class Breakup(Command):
             await m.delete()
         except:
             pass
-        lover_player = Player(tg_id=lover)
+        lover_player = Player(model_id=lover)
         await player.break_up(m.chat.id, lover_player)
         await m.answer('<a href="tg://user?id=%s">%s</a> и <a href="tg://user?id=%s">%s</a> больше не вместе' %
                        (player.tg_id, player.name, lover_player.tg_id, lover_player.name))

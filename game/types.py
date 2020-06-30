@@ -4,6 +4,8 @@ import logging
 import random
 import typing
 import asyncio
+
+from bson.objectid import ObjectId
 from mongoengine.queryset.visitor import Q
 
 from models import *
@@ -31,7 +33,8 @@ class Player:
 
     gender_emoji_reference = {'male': '♂️', 'female': '♀️', 'transgender': '♂️♀️'}
 
-    def __init__(self, tg_id: int = None, model: User = None):
+    def __init__(self, model_id: ObjectId = None, tg_id: int = None, model: User = None):
+        self.id = model_id
         self.tg_id = tg_id
         self.exists = False
         self.name = None
@@ -55,11 +58,13 @@ class Player:
         return self
 
     def update_from_db(self, model: User = None):
-        model = model if model else User.get(tg_id=self.tg_id)
+        if not model:
+            model = User.get(id=self.id) if self.id else User.get(tg_id=self.tg_id)
         self.model = model
         if not model:
             self.exists = False
             return
+        self.id = model.id
         self.tg_id = model.tg_id
         self.name = model.name
         self.gender = model.gender
@@ -125,11 +130,11 @@ class Player:
         if isinstance(chat, Country):
             chat = Group.chat_tg_id
         self.model.delete()
-        child = Player(tg_id=self.tg_id)
+        child = self
         child = await child.create(name=self.name, gender=self.gender, age=0,
-                                   chats=self.chats, parents=[mother.tg_id, father.tg_id])
-        mother.model.push_child(chat, child.tg_id)
-        father.model.push_child(chat, child.tg_id)
+                                   chats=self.chats, parents=[mother.id, father.id])
+        mother.model.push_child(chat, child.id)
+        father.model.push_child(chat, child.id)
 
     async def die(self, update_from_db=False):
         if update_from_db:
@@ -137,38 +142,40 @@ class Player:
         if self.model.age < 101:
             self.model.update_age(101)
 
-        logging.info(f'process died user {self.tg_id}')
+        logging.info(f'process died user {self.id} ({self.tg_id})')
 
         output = await self.notify_partners_about_death()
         output.update(await self.notify_lovers_about_death())
         output.update((await self.notify_childs_about_death()))
         output.update((await self.notify_parents_about_death()))
 
-        logging.info(f'process died user {self.tg_id}: finished')
+        logging.info(f'process died user {self.id} ({self.tg_id}): finished')
 
         return output
 
     async def notify_partners_about_death(self) -> dict:
         output = {}
         for chat in self.partners:
-            partner_player = Player(tg_id=self.partners[chat])
-            await partner_player.divorce(chat, partner_player)
+            partner_player = Player(model_id=self.partners[chat])
+            await self.divorce(chat, partner_player)
             if not partner_player.alive:
                 continue
             country = Country(chat_tg_id=int(chat))
-            logging.info(f'process died user {self.tg_id}: notify partner {partner_player.tg_id}')
+            logging.info(f'process died user {self.id} ({self.tg_id}):'
+                         f' notify partner {partner_player.id} ({partner_player.tg_id})')
             output[partner_player.tg_id] = 'Ваш партнер в стране %s, %s - умер...' % (country.name, self.name)
         return output
 
     async def notify_lovers_about_death(self) -> dict:
         output = {}
         for chat in self.lovers:
-            lover_player = Player(tg_id=self.partners[chat])
-            await lover_player.break_up(chat, lover_player)
+            lover_player = Player(model_id=self.lovers[chat])
+            await self.break_up(chat, lover_player)
             if not lover_player.alive:
                 continue
             country = Country(chat_tg_id=int(chat))
-            logging.info(f'process died user {self.tg_id}: notify lover {lover_player.tg_id}')
+            logging.info(f'process died user {self.id} ({self.tg_id}):'
+                         f' notify lover {lover_player.id} ({lover_player.tg_id})')
             output[lover_player.tg_id] = 'Ваша вторая половинка в стране %s, %s - умер...' % (country.name, self.name)
         return output
 
@@ -179,10 +186,11 @@ class Player:
             childs = self.childs.get(chat, [])
             childs += childs
         for child_id in childs:
-            child_user = Player(tg_id=child_id)
+            child_user = Player(model_id=child_id)
             if not child_user.alive:
                 continue
-            logging.info(f'process died user {self.tg_id}: notify child {child_id}')
+            logging.info(f'process died user {self.id} ({self.tg_id}):'
+                         f' notify child {child_user.id} ({child_user.tg_id})')
             output[child_id] = 'Ваш родитель, %s - умер...' % self.name
         return output
 
@@ -191,10 +199,11 @@ class Player:
         for parent_id in self.parents:
             if parent_id == "0":
                 continue
-            parent_player = Player(tg_id=parent_id)
+            parent_player = Player(model_id=parent_id)
             if not parent_player.alive:
                 continue
-            logging.info(f'process died user {self.tg_id}: notify parent {parent_player.tg_id}')
+            logging.info(f'process died user {self.id} ({self.tg_id}):'
+                         f' notify parent {parent_player.id} ({parent_player.tg_id})')
             output[parent_player.tg_id] = 'Ваше чадо, %s - умерло...' % self.name
         return output
 
@@ -205,8 +214,8 @@ class Player:
         if not can_marry['result']:
             yield {'content_type': 'text', 'content': self.cant_marry_reason_exaplanation[can_marry['reason']]}
 
-        self.model.set_partner(chat_tg_id, partner.tg_id)
-        partner.model.set_partner(chat_tg_id, self.tg_id)
+        self.model.set_partner(chat_tg_id, partner.id)
+        partner.model.set_partner(chat_tg_id, self.id)
         self.model.unset_lover(chat_tg_id)
         partner.model.unset_lover(chat_tg_id)
         text = ('Поздавляем <a href="tg://user?id=%d">%s</a> и <a href="tg://user?id=%d">%s</a> со свадьбой' %
@@ -220,8 +229,8 @@ class Player:
         if not can_date['result']:
             yield {'content_type': 'text', 'content': self.cant_date_reason_exaplanation[can_date['reason']]}
 
-        self.model.set_lover(chat_tg_id, lover.tg_id)
-        lover.model.set_lover(chat_tg_id, self.tg_id)
+        self.model.set_lover(chat_tg_id, lover.id)
+        lover.model.set_lover(chat_tg_id, self.id)
         text = ('<a href="tg://user?id=%d">%s</a> и <a href="tg://user?id=%d">%s</a> теперь встречаются' %
                 (self.tg_id, self.name, lover.tg_id, lover.name))
         yield {'content_type': 'text', 'content': text}
@@ -235,13 +244,13 @@ class Player:
         """
         if not partner.alive:
             return {'result': False, 'reason': 'partner_dead'}
-        if self.tg_id == partner.tg_id:
+        if self.id == partner.id:
             return {'result': False, 'reason': 'cant_marry_self'}
         if self.age < 16 or partner.age < 16:
             return {'result': False, 'reason': 'too_young'}
-        if self.lovers.get(str(chat_tg_id), partner.tg_id) != partner.tg_id:
+        if self.lovers.get(str(chat_tg_id), partner.id) != partner.id:
             return {'result': False, 'reason': 'is_dating_another_person'}
-        if partner.lovers.get(str(chat_tg_id), self.tg_id) != self.tg_id:
+        if partner.lovers.get(str(chat_tg_id), self.id) != self.id:
             return {'result': False, 'reason': 'partner_is_dating_another_person'}
         if str(chat_tg_id) in self.partners:
             return {'result': False, 'reason': 'married'}
@@ -259,7 +268,7 @@ class Player:
         """
         if not lover.alive:
             return {'result': False, 'reason': 'lover_dead'}
-        if self.tg_id == lover.tg_id:
+        if self.id == lover.id:
             return {'result': False, 'reason': 'cant_date_self'}
         if str(chat_tg_id) in self.lovers:
             return {'result': False, 'reason': 'is_dating'}
@@ -276,7 +285,7 @@ class Player:
         if partner:
             partner_model = await self.resolve_user(partner, 'User')
         else:
-            partner_model = User(tg_id=self.model.partners[str(chat_tg_id)])
+            partner_model = User(id=self.model.partners[str(chat_tg_id)])
         self.model.unset_partner(chat_tg_id)
         partner_model.unset_partner(chat_tg_id)
 
@@ -284,7 +293,7 @@ class Player:
         if lover:
             lover_model = await self.resolve_user(lover, 'User')
         else:
-            lover_model = User(tg_id=self.model.lovers[str(chat_tg_id)])
+            lover_model = User(id=self.model.lovers[str(chat_tg_id)])
         self.model.unset_lover(chat_tg_id)
         lover_model.unset_lover(chat_tg_id)
 
@@ -298,7 +307,7 @@ class Player:
             start_message = custom_messages[0].replace('{me}', kwargs.get('me')).replace('{reply}', kwargs.get('reply'))
             end_message = custom_messages[-1].replace('{me}', kwargs.get('me')).replace('{reply}', kwargs.get('reply'))
             delay = custom_delays.get(0)
-        elif self.tg_id == partner.tg_id:
+        elif self.id == partner.id:
             verb_form = 'кончил' if self.gender == 'male' else 'кончила' if self.gender == 'female' else 'кончил(а)'
             start_message = '<a href="tg://user?id=%d">%s</a> дрочит.' % (self.tg_id, self.name)
             end_message = '<a href="tg://user?id=%d">%s</a> %s.' % (self.tg_id, self.name, verb_form)
@@ -320,7 +329,7 @@ class Player:
             await asyncio.sleep(delay)
         for num, message in enumerate(custom_messages[1:-1]):
             msg = message.replace('{me}', kwargs.get('me')).replace('{reply}', kwargs.get('reply'))
-            yield {'content_type': 'text', 'content': message}
+            yield {'content_type': 'text', 'content': msg}
             if custom_delays.get(num+1):
                 await asyncio.sleep(custom_delays[num+1])
 
@@ -356,7 +365,7 @@ class Player:
         return {'child': child, 'mother': female, 'father': male}
 
     async def get_sex_types(self, partner: Player) -> dict:
-        if self.tg_id == partner.tg_id:
+        if self.id == partner.id:
             if self.gender == 'male':
                 sex_type = 'masturbate_male'
             elif self.gender == 'female':
@@ -451,8 +460,10 @@ class Country:
 class Eva:
     gender = 'female'
     name = 'Ева'
+    alive = True
 
 
 class Adam:
     gender = 'male'
     name = 'Адам'
+    alive = True

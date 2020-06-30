@@ -17,3 +17,9 @@ dp.middleware.setup(AuthMiddlware())
 if __name__ == '__main__':
     multiprocessing.Process(target=Queue.run).start()
     executor.start_polling(dp, skip_updates=True)
+
+
+# TODO:
+# [] create auto-clearing db for not-used documents
+# [x] clear users in DB
+# [x] test getting the last (by date) document of user by tg_id, if not working: make work
