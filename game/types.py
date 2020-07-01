@@ -45,8 +45,6 @@ class Player:
         self.partners = None
         self.lovers = None
         self.childs = None
-        self.alive = None
-        self.in_born_queue = None
         self.model = model
         self.update_from_db(model)
 
@@ -59,6 +57,7 @@ class Player:
 
     def update_from_db(self, model: User = None):
         if not model:
+            print(self.id, self.tg_id)
             model = User.get(id=self.id) if self.id else User.get(tg_id=self.tg_id)
         self.model = model
         if not model:
@@ -74,9 +73,16 @@ class Player:
         self.partners = model.partners
         self.lovers = model.lovers
         self.childs = model.childs
-        self.alive = -1 < model.age < 101
-        self.in_born_queue = model.age == -1
         self.exists = True
+
+    @property
+    def alive(self):
+        if self.age is not None:
+            return -1 < self.age < 101
+
+    @property
+    def in_born_queue(self):
+        return self.age == -1
 
     async def join_chat(self, chat_tg_id):
         self.model.update(push__chats=chat_tg_id)
@@ -141,6 +147,7 @@ class Player:
             self.update_from_db()
         if self.model.age < 101:
             self.model.update_age(101)
+            self.age = 101
 
         logging.info(f'process died user {self.id} ({self.tg_id})')
 

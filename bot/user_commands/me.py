@@ -81,8 +81,8 @@ class Me(Command):
             await m.answer('Ждите своего рождения')
             return
 
-        parent = Player(tg_id=player.parents[0]) if player.parents[0] != '0' else Eva
-        second_parent = Player(tg_id=player.parents[1]) if player.parents[1] != '0' else Adam
+        parent = Player(model_id=player.parents[0]) if player.parents[0] != '0' else Eva
+        second_parent = Player(model_id=player.parents[1]) if player.parents[1] != '0' else Adam
         emojis = player.gender_emoji_reference
         text = 'Имя: %s %s\nВозраст: %s\nРодители: ' % (player.name, emojis[player.gender], player.age)
         parents = (parent, second_parent)

@@ -15,8 +15,11 @@ class Command:
 
     @classmethod
     def register(cls, callback=None, *custom_filters, commands=None, regexp=None,
-                 content_types=None, state=None, run_task=None, **kwargs):
+                 content_types=None, state=None, run_task=None, set_commands=True, **kwargs):
         callback = callback or cls.execute
+        if set_commands and not commands:
+            commands = [cls.__name__.lower()]
+        print(commands)
         cls.dp.register_message_handler(callback=callback, *custom_filters, commands=commands, regexp=regexp,
                                         content_types=content_types, state=state, run_task=run_task, **kwargs)
 

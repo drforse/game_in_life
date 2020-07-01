@@ -8,37 +8,39 @@ from .user_commands.base.action import BaseAction
 
 
 def register_handlers():
-    Start.register(commands=['start'])
-    Start.register(callback=Start.set_country_name, state=Start.states_group.set_name)
+    Start.register()
+    Start.register(callback=Start.set_country_name, state=Start.states_group.set_name, set_commands=False)
 
-    Command.register(callback=Game.get_new_player_name, state=CreatePlayerForm.set_name)
-    Command.register(callback=Game.get_new_player_gender, state=CreatePlayerForm.set_gender)
+    Command.register(callback=Game.get_new_player_name, state=CreatePlayerForm.set_name, set_commands=False)
+    Command.register(callback=Game.get_new_player_gender, state=CreatePlayerForm.set_gender, set_commands=False)
 
     BaseAction.reg_callback(BaseAction.accept_action, lambda c: re.match('action .* accept ', c.data))
     BaseAction.reg_callback(BaseAction.decline_action, lambda c: re.match('action .* decline ', c.data))
 
-    Action.register(commands=['action'])
+    Action.register()
 
-    Marry.register(commands=['marry'])
+    Marry.register()
 
-    Fuck.register(commands=['fuck'])
+    Fuck.register()
 
-    Suicide.register(commands=['suicide'])
+    Suicide.register()
 
-    Divorce.register(commands=['divorce'])
+    Divorce.register()
 
-    Me.register(commands=['me'], state='*')
+    Me.register(state='*')
 
-    You.register(commands=['you'], state='*')
+    You.register(state='*')
 
-    Date.register(commands=['date'])
+    Date.register()
 
-    Breakup.register(commands=['breakup'])
+    Breakup.register()
 
-    AddSexGif.register(commands=['addsexgif'])
+    AddSexGif.register()
 
-    AddCumSexGif.register(commands=['addcumsexgif'])
+    AddCumSexGif.register()
 
-    DelSexGif.register(commands=['delsexgif'])
+    DelSexGif.register()
 
-    DelCumSexGif.register(commands=['delcumsexgif'])
+    DelCumSexGif.register()
+
+    Restart.register()
