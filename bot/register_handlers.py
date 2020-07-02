@@ -44,3 +44,5 @@ def register_handlers():
     DelCumSexGif.register()
 
     Restart.register()
+
+    Help.register()

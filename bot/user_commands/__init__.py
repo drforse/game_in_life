@@ -9,6 +9,7 @@ from .breakup import Breakup
 from .action import Action
 from .you import You
 from .restart import Restart
+from .help import Help
 
 
 __all__ = ['Start',
@@ -21,4 +22,5 @@ __all__ = ['Start',
            'Breakup',
            'Action',
            'You',
-           'Restart']
+           'Restart',
+           'Help']
