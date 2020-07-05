@@ -329,6 +329,7 @@ class Player:
         sex_type = sex_types['main']
         universal_sex_type = sex_types['universal']
         possible_gifs = await self.get_possible_sex_gifs(sex_type, universal_sex_type)
+        print(f"{sex_types=}", f"{possible_gifs=}")
 
         if possible_gifs:
             yield {'content_type': 'animation', 'content': random.choice(possible_gifs)}
