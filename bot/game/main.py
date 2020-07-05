@@ -148,12 +148,14 @@ class Game:
             if out['content_type'] == 'animation':
                 try:
                     await bot.send_animation(chat_tg_id, out['content'])
-                except:
+                except Exception as e:
+                    logging.error(f"gif ({out.get('content')}) not sent: {e}")
                     pass
             elif out['content_type'] == 'text':
                 try:
                     await bot.send_message(chat_tg_id, out['content'])
-                except:
+                except Exception as e:
+                    logging.error(f"text ({out.get('content')}) not sent: {e}")
                     pass
             elif out['content_type'] == 'error' and out['content'] == 'NoCustomMessagesGiven':
                 try:
