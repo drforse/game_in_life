@@ -85,8 +85,6 @@ class Group(Document, MyDocument):
 
 
 class SexGifs(Document, MyDocument):
-    meta = {'allow_inheritance': True}
-
     type = StringField(required=True, unique=True)  # hetero, lesbian, gay, masturbate, universal
     gif_ids = ListField(required=True)
 
@@ -109,31 +107,30 @@ class SexGifs(Document, MyDocument):
                                     'file_unique_id': gif_unique_id})
 
 
-class CumSexGifs(SexGifs):
+class CumSexGifs(Document, MyDocument):
     """
-    MongoEngine Document, same as SexGifs, but different collection
+    same as SexGifs, but different collection
     """
-    pass
-    # type = StringField(required=True, unique=True)  # hetero, lesbian, gay, masturbate, universal
-    # gif_ids = ListField(required=True)
-    #
-    # @classmethod
-    # def push_gif(cls, sex_type: str, gif_id: str, gif_unique_id: str):
-    #     model = cls.get(type=sex_type)
-    #     if not model:
-    #         cls(type=sex_type, gif_ids=[{'file_id': gif_id,
-    #                                      'file_unique_id': gif_unique_id}]).save()
-    #         return
-    #     model.update(push__gif_ids={'file_id': gif_id,
-    #                                 'file_unique_id': gif_unique_id})
-    #
-    # @classmethod
-    # def pull_gif(cls, sex_type: str, gif_unique_id: str):
-    #     model = cls.get(type=sex_type)
-    #     if not model:
-    #         return
-    #     model.update(pull__gif_ids={'file_id': {'$exists': True},
-    #                                 'file_unique_id': gif_unique_id})
+    type = StringField(required=True, unique=True)  # hetero, lesbian, gay, masturbate, universal
+    gif_ids = ListField(required=True)
+
+    @classmethod
+    def push_gif(cls, sex_type: str, gif_id: str, gif_unique_id: str):
+        model = cls.get(type=sex_type)
+        if not model:
+            cls(type=sex_type, gif_ids=[{'file_id': gif_id,
+                                         'file_unique_id': gif_unique_id}]).save()
+            return
+        model.update(push__gif_ids={'file_id': gif_id,
+                                    'file_unique_id': gif_unique_id})
+
+    @classmethod
+    def pull_gif(cls, sex_type: str, gif_unique_id: str):
+        model = cls.get(type=sex_type)
+        if not model:
+            return
+        model.update(pull__gif_ids={'file_id': {'$exists': True},
+                                    'file_unique_id': gif_unique_id})
 
 
 __all__ = ['User',
