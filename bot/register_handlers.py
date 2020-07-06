@@ -55,7 +55,3 @@ def register_handlers():
     Restart.register()
 
     Help.register()
-
-    @Command.dp.message_handler(content_types=['photo'])
-    async def debug(m):
-        print(m)

@@ -118,7 +118,7 @@ class Game:
             photo = InlineQueryResultCachedPhoto(id=str(num),
                                                  photo_file_id=photo_id)
             default_user_photos.append(photo)
-        await q.answer(default_user_photos, cache_time=1)
+        await q.answer(default_user_photos)
 
     @staticmethod
     async def get_users_availiable_for_children(user: User):
