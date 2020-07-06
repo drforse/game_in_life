@@ -71,7 +71,10 @@ class Me(Command):
                 text += ' 🕯'
             text += '\n'
 
-        await m.answer(text)
+        if player.photo_id:
+            await m.answer_photo(player.photo_id, text)
+        else:
+            await m.answer(text)
 
     @classmethod
     async def execute_in_private(cls, m: Message, player: Player = None):
@@ -93,4 +96,7 @@ class Me(Command):
             if num != len(parents) - 1:
                 text += ' | '
 
-        await m.answer(text)
+        if player.photo_id:
+            await m.answer_photo(player.photo_id, text)
+        else:
+            await m.answer(text)

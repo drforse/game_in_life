@@ -1,6 +1,13 @@
 from aiogram.dispatcher.filters.state import StatesGroup, State
 from aiogram.dispatcher import FSMContext
-from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
+from aiogram.types import (Message,
+                           InlineQuery,
+                           InlineQueryResultCachedPhoto,
+                           ReplyKeyboardMarkup,
+                           KeyboardButton,
+                           ReplyKeyboardRemove,
+                           InlineKeyboardMarkup,
+                           InlineKeyboardButton)
 from aiogram import Bot, Dispatcher
 import logging
 import typing
@@ -15,6 +22,7 @@ from config import SEX_DELAY_INTERVAL
 class CreatePlayerForm(StatesGroup):
     set_name = State()
     set_gender = State()
+    set_pic = State()
 
 
 class FuckForm(StatesGroup):
@@ -59,14 +67,36 @@ class Game:
         if gender not in ('мужской', 'женский', 'трансгендер'):
             await m.answer('Выберите из предложенных вариантов!')
             return
+        gender_reference = {'мужской': 'male', 'женский': 'female', 'трансгендер': 'transgender'}
+        async with state.proxy() as dt:
+            dt['gender'] = gender_reference[gender]
+        kb = InlineKeyboardMarkup()
+        button = InlineKeyboardButton('Выбрать аватарку',
+                                      switch_inline_query_current_chat='default userpics')
+        kb.add(button)
+        await m.answer('Теперь отправь аватарку для своего персонажа или выбери, нажав кнопку ниже',
+                       reply_markup=kb)
+        await CreatePlayerForm.next()
+
+    @classmethod
+    async def get_new_player_pic(cls, m: Message, state: FSMContext):
+        if not m.photo:
+            await m.answer('Автарка должна быть картинкой')
+            return
+        photo_id = m.photo[-1].file_id
         async with state.proxy() as dt:
             name = dt['name']
-        gender_reference = {'мужской': 'male', 'женский': 'female', 'трансгендер': 'transgender'}
+            gender = dt['gender']
+        await cls.create_new_player(m, state, m.from_user.id, name, gender, photo_id)
 
-        old_user = User.get(tg_id=m.from_user.id)
+    @classmethod
+    async def create_new_player(cls, m: Message, state: FSMContext,
+                                user_id: int, name: str, gender: str, photo_id: str = None):
+
+        old_user = User.get(tg_id=user_id)
         chats = old_user.chats if old_user else []
 
-        user = User(tg_id=m.from_user.id, name=name, age=-1, gender=gender_reference[gender], chats=chats)
+        user = User(tg_id=user_id, name=name, age=-1, gender=gender, photo_id=photo_id, chats=chats)
         user.save()
         text = 'Создан игрок с данными:\nИмя: %s\nПол: %s\nВозраст: 0\n' % (user.name, user.gender)
         if not await cls.get_users_availiable_for_children(user):
@@ -78,8 +108,17 @@ class Game:
             user.save()
             text += ('\nЖдите своего рождения. Чтобы родиться, Вы должны написать /start хотя бы в одной из групп с '
                      'ботом (чем больше групп, тем выше скорость рождения).')
-        await m.answer(text, reply_markup=ReplyKeyboardRemove())
+        await m.answer_photo(user.photo_id, text, reply_markup=ReplyKeyboardRemove())
         await state.finish()
+
+    @staticmethod
+    async def answer_inline_query_with_default_userpics(q: InlineQuery, state: FSMContext):
+        default_user_photos = []
+        for num, photo_id in enumerate(DefaultUserpics.get().photo_ids):
+            photo = InlineQueryResultCachedPhoto(id=str(num),
+                                                 photo_file_id=photo_id)
+            default_user_photos.append(photo)
+        await q.answer(default_user_photos, cache_time=1)
 
     @staticmethod
     async def get_users_availiable_for_children(user: User):

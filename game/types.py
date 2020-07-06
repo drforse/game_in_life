@@ -39,6 +39,7 @@ class Player:
         self.exists = False
         self.name = None
         self.gender = None
+        self.photo_id = None
         self.age = None
         self.chats = None
         self.parents = None
@@ -67,6 +68,7 @@ class Player:
         self.tg_id = model.tg_id
         self.name = model.name
         self.gender = model.gender
+        self.photo_id = model.photo_id
         self.age = model.age
         self.chats = model.chats
         self.parents = model.parents

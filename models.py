@@ -26,6 +26,7 @@ class User(Document, MyDocument):
     tg_id = IntField(required=True)
     name = StringField(required=True)
     gender = StringField(required=True)  # male, female, transgender
+    photo_id = StringField(default=None)
     age = IntField(max_value=101, min_value=-1, default=0)
     chats = ListField(IntField())  # [chat_id]
     partners = DictField(default={})  # {chat_id: partner_id}
@@ -133,7 +134,22 @@ class CumSexGifs(Document, MyDocument):
                                     'file_unique_id': gif_unique_id})
 
 
+class DefaultUserpics(Document, MyDocument):
+    photo_ids = ListField()
+
+    @classmethod
+    def push_pic(cls, photo_id: str):
+        model = cls.get()
+        model.update(push__photo_ids=photo_id)
+
+    @classmethod
+    def pull_pic(cls, photo_id: str):
+        model = cls.get()
+        model.update(pull__photo_ids=photo_id)
+
+
 __all__ = ['User',
            'Group',
            'SexGifs',
-           'CumSexGifs']
+           'CumSexGifs',
+           'DefaultUserpics']
