@@ -55,3 +55,5 @@ def register_handlers():
     Restart.register()
 
     Help.register()
+
+    Exchange.register()

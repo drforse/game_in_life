@@ -1,7 +1,7 @@
 from aiogram.types import Message
 
 from ..core import Command
-from game.types import Player, Eva, Adam
+from game.types.player import Player, Eva, Adam
 
 
 class Me(Command):
@@ -71,6 +71,11 @@ class Me(Command):
                 text += ' 🕯'
             text += '\n'
 
+        pasyucoin_balance = player.balance.pasyucoin_currency_balance
+        text += 'Баланс💰:\n'
+        text += '   Основная валюта: 💚%s\n' % round(player.balance.main_currency_balance, 2)
+        text += '   Пасюкоины: 🐴%s' % round(pasyucoin_balance, 2)
+
         if player.photo_id:
             await m.answer_photo(player.photo_id, text)
         else:
@@ -95,6 +100,12 @@ class Me(Command):
                 text += ' 🕯'
             if num != len(parents) - 1:
                 text += ' | '
+        text += '\n'
+
+        pasyucoin_balance = player.balance.pasyucoin_currency_balance
+        text += 'Баланс💰:\n'
+        text += '   Основная валюта: 💚%s\n' % round(player.balance.main_currency_balance, 2)
+        text += '   Пасюкоины: 🐴%s' % round(pasyucoin_balance, 2)
 
         if player.photo_id:
             await m.answer_photo(player.photo_id, text)

@@ -1,12 +1,10 @@
 from aiogram.dispatcher.middlewares import BaseMiddleware
 from aiogram.dispatcher.handler import CancelHandler
 from aiogram.types import Message, CallbackQuery
-from aiogram import Dispatcher
 import logging
 
-from models import *
 from bot import user_commands, dev_commands
-from game.types import Player
+from game.types.player import Player
 from config import *
 
 

@@ -12,10 +12,9 @@ from aiogram import Bot, Dispatcher
 import logging
 import typing
 import random
-import asyncio
 
 from models import *
-from game.types import Player
+from game.types.player import Player
 from config import SEX_DELAY_INTERVAL
 
 

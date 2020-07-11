@@ -27,6 +27,7 @@ class User(Document, MyDocument):
     name = StringField(required=True)
     gender = StringField(required=True)  # male, female, transgender
     photo_id = StringField(default=None)
+    main_currency_balance = FloatField(default=0.0)
     age = IntField(max_value=101, min_value=-1, default=0)
     chats = ListField(IntField())  # [chat_id]
     partners = DictField(default={})  # {chat_id: partner_id}
@@ -77,6 +78,10 @@ class User(Document, MyDocument):
 
     def unset_lover(self, chat: int):
         self.update(__raw__={'$unset': {f'lovers.{chat}': {'$exists': True}}})
+        self.save()
+
+    def inc_main_currency_balance(self, value: float):
+        self.update(__raw__={'$inc': {'main_currency_balance': value}})
         self.save()
 
 

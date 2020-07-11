@@ -1,7 +1,7 @@
 from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 
 from .base.action import BaseAction
-from game.types import *
+from game.types.player import *
 
 
 class Date(BaseAction):

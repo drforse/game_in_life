@@ -10,6 +10,7 @@ from .action import Action
 from .you import You
 from .restart import Restart
 from .help import Help
+from .exchange import Exchange
 
 
 __all__ = ['Start',
@@ -23,4 +24,5 @@ __all__ = ['Start',
            'Action',
            'You',
            'Restart',
-           'Help']
+           'Help',
+           'Exchange']

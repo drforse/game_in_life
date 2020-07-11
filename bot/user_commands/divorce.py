@@ -1,7 +1,7 @@
 from aiogram.types import Message
 
 from ..core import Command
-from game.types import Player
+from game.types.player import Player
 
 
 class Divorce(Command):

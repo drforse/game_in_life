@@ -4,7 +4,7 @@ from aiogram.dispatcher import FSMContext
 
 from ..core import Command
 from ..game import Game
-from game.types import Player, Country
+from game.types.player import Player, Country
 from .me import Me
 
 

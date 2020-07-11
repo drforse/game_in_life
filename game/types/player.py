@@ -9,6 +9,7 @@ from bson.objectid import ObjectId
 from mongoengine.queryset.visitor import Q
 
 from models import *
+from .balance import Balance
 
 
 class Player:
@@ -46,6 +47,7 @@ class Player:
         self.partners = None
         self.lovers = None
         self.childs = None
+        self.balance = Balance()
         self.model = model
         self.update_from_db(model)
 
@@ -75,6 +77,7 @@ class Player:
         self.partners = model.partners
         self.lovers = model.lovers
         self.childs = model.childs
+        self.balance = Balance(self.id)
         self.exists = True
 
     @property
