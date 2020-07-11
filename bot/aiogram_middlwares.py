@@ -54,6 +54,8 @@ class AuthMiddlware(BaseMiddleware):
                 except:
                     pass
                 raise CancelHandler
+            if m.chat.type in ['group', 'supergroup'] and m.chat.id not in player.chats:
+                await player.join_chat(m.chat.id)
             if not player.alive:
                 try:
                     await m.answer('<a href="tg://user?id=%s">%s</a> мёртв.' %

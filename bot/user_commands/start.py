@@ -37,8 +37,6 @@ class Start(Command):
             await m.answer('Привет, мертвец. Ты в стране %s. Напиши мне в лс, чтобы ожить. '
                            'Мертвые не играют' % country.name)
             return
-        if m.chat.id not in player.chats:
-            await player.join_chat(m.chat.id)
         await m.answer('Привет, %s. Ты находишься в стране %s' % (player.name, country.name))
 
     @classmethod
