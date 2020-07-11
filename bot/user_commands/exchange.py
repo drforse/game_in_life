@@ -16,6 +16,7 @@ class Exchange(Command):
     @classmethod
     async def execute(cls, m: Message):
         await m.answer('Команда временно неактивна')
+        return
         player = Player(tg_id=m.from_user.id)
         exchange = ExchangeCore(client=player)
         try:

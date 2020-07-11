@@ -21,5 +21,3 @@ if __name__ == '__main__':
 
 # TODO:
 # [] create auto-clearing db for not-used documents
-# [x] clear users in DB
-# [x] test getting the last (by date) document of user by tg_id, if not working: make work
