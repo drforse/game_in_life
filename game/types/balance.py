@@ -34,7 +34,7 @@ class Balance:
     async def yulcoin_currency_balance(self) -> float:
         api = SendermanRoulletteApi()
         balance = await api.get_balance(self.player.tg_id)
-        return float(balance)
+        return float(balance) if balance else None
 
     async def get_all_currencies_balance(self) -> AllCurrenciesBalance:
         return AllCurrenciesBalance(main=self.main_currency_balance,
