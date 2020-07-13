@@ -76,7 +76,8 @@ class Me(Command):
         yulcoin_balance = await player.balance.yulcoin_currency_balance
         text += 'Баланс💰:\n'
         text += '   Кофеины (осн. вал.): ☕%s\n' % round(player.balance.main_currency_balance, 2)
-        text += '   Юлькоины: %s\n' % round(yulcoin_balance)
+        if yulcoin_balance:
+            text += '   Юлькоины: 🌯%s\n' % round(yulcoin_balance)
 
         text += 'Сытость: %s' % round(player.satiety)
 
@@ -110,7 +111,8 @@ class Me(Command):
         yulcoin_balance = await player.balance.yulcoin_currency_balance
         text += 'Баланс💰:\n'
         text += '   Кофеины (осн. вал.): ☕%s\n' % round(player.balance.main_currency_balance, 2)
-        text += '   Юлькоины: %s\n' % round(yulcoin_balance)
+        if yulcoin_balance:
+            text += '   Юлькоины: 🌯%s\n' % round(yulcoin_balance)
 
         text += 'Сытость: %s' % round(player.satiety)
 

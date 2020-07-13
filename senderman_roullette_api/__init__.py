@@ -1,4 +1,5 @@
 import logging
+import typing
 from aiohttp import ClientSession
 from urlpath import URL
 
@@ -12,18 +13,17 @@ class SendermanRoulletteApi:
         self._bot_token = bot_token
         self._session = session or ClientSession()
 
-    async def get_balance(self, user_id: int):
+    async def get_balance(self, user_id: int) -> typing.Optional[int]:
         url = self._generate_url('getBalance', False, user_id=user_id)
         result = await self._session.get(url)
         result = await self._get_result_or_raise(result, 'getBalance', user_id=user_id)
         coins = result['coins']
         if coins == -1:
-            raise UserDoesNotExist(str(user_id))
+            return None
         return coins
 
     async def update_coins(self, user_id: int, coins: int):
         url = self._generate_url('updateCoins', True, user_id=user_id, coins=coins)
-        print(url)
         result = await self._session.put(url)
         result = await self._get_result_or_raise(result, 'updateCoins', user_id=user_id, coins=coins)
 
@@ -39,6 +39,8 @@ class SendermanRoulletteApi:
             logging.error(log)
             raise BadRequest(response.status)
         result = await response.json()
+        if result.get('result') == 'User does not exist':
+            raise UserDoesNotExist
         if result.get('ok') is False:
             raise SendermanRoulleteApiException(str(result))
         return result

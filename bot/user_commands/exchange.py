@@ -8,6 +8,7 @@ from ..core import Command
 from game.types import Exchange as ExchangeCore
 from game.types import Player
 from game.exceptions import *
+import senderman_roullette_api.exceptions
 
 
 class Exchange(Command):
@@ -25,7 +26,6 @@ class Exchange(Command):
                                            'main': ['caffeine', 'caffeines', 'кофеин', 'кофеины'],
                                            'yulcoin': ['yulcoin', 'yulcoins', 'юлькоин', 'юлькоины']}
             possible_currencies_names = [i for i in itertools.chain(*currencies_naming_reference.values())]
-            print(possible_currencies_names)
             split = m.text.split()
             if len(split) == 1:
                 await m.answer('Шаблон: /exchange {from_currency} {to_currency} {value}\n'
@@ -43,12 +43,13 @@ class Exchange(Command):
                 return
             logging.info(f'balance: {player.balance}')
             from_cur, to_cur = cls.resolve_currency(from_cur), cls.resolve_currency(to_cur)
-            print(from_cur, to_cur)
             await exchange.convert(from_cur, to_cur, float(split[2]))
             logging.info(f'balance after converting: {player.balance}')
             await m.answer('Операция успешна произведена.')
         except NotEnoughMoneyOnBalance:
             await m.answer('Недостаточно денег на балансе.')
+        except senderman_roullette_api.exceptions.UserDoesNotExist:
+            await m.answer('У Вас нет счета в юлькоинах, чтобы его открыть, зайдите в @miniroulette_bot')
 
     @staticmethod
     def resolve_currency(currency) -> str:
