@@ -5,6 +5,7 @@ from game.types.player import *
 
 
 class Marry(BaseAction):
+    needs_satiety_level = 35
 
     @staticmethod
     async def execute(m: Message):

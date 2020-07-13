@@ -6,6 +6,7 @@ from game.types.player import Player, Eva, Adam
 
 class Me(Command):
     needs_reply_auth = False
+    needs_satiety_level = 0
 
     @classmethod
     async def execute(cls, m: Message, state=None):
@@ -72,9 +73,12 @@ class Me(Command):
             text += '\n'
 
         pasyucoin_balance = player.balance.pasyucoin_currency_balance
+        yulcoin_balance = await player.balance.yulcoin_currency_balance
         text += 'Баланс💰:\n'
-        text += '   Основная валюта: 💚%s\n' % round(player.balance.main_currency_balance, 2)
-        text += '   Пасюкоины: 🐴%s' % round(pasyucoin_balance, 2)
+        text += '   Кофеины (осн. вал.): ☕%s\n' % round(player.balance.main_currency_balance, 2)
+        text += '   Юлькоины: %s\n' % round(yulcoin_balance)
+
+        text += 'Сытость: %s' % round(player.satiety)
 
         if player.photo_id:
             await m.answer_photo(player.photo_id, text)
@@ -103,9 +107,12 @@ class Me(Command):
         text += '\n'
 
         pasyucoin_balance = player.balance.pasyucoin_currency_balance
+        yulcoin_balance = await player.balance.yulcoin_currency_balance
         text += 'Баланс💰:\n'
-        text += '   Основная валюта: 💚%s\n' % round(player.balance.main_currency_balance, 2)
-        text += '   Пасюкоины: 🐴%s' % round(pasyucoin_balance, 2)
+        text += '   Кофеины (осн. вал.): ☕%s\n' % round(player.balance.main_currency_balance, 2)
+        text += '   Юлькоины: %s\n' % round(yulcoin_balance)
+
+        text += 'Сытость: %s' % round(player.satiety)
 
         if player.photo_id:
             await m.answer_photo(player.photo_id, text)

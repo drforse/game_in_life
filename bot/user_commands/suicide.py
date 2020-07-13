@@ -8,6 +8,7 @@ from game.types.player import Player
 class Suicide(Command):
     needs_auth = False
     needs_reply_auth = False
+    needs_satiety_level = 1
 
     @staticmethod
     async def execute(m: Message):

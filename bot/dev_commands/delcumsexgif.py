@@ -1,7 +1,7 @@
 from aiogram.types import Message
 
 from ..core import Command
-from models import CumSexGifs
+from models import CumSexGifsModel
 
 
 class DelCumSexGif(Command):
@@ -15,5 +15,5 @@ class DelCumSexGif(Command):
         gif = m.reply_to_message.animation
         sex_types = m.text.split()[1:]
         for sex_type in sex_types:
-            CumSexGifs.pull_gif(sex_type, gif.file_unique_id)
+            CumSexGifsModel.pull_gif(sex_type, gif.file_unique_id)
         await m.answer('Success')

@@ -11,6 +11,11 @@ from .you import You
 from .restart import Restart
 from .help import Help
 from .exchange import Exchange
+from .backpack import Backpack
+from .market import Market
+from .observe_item import ObserveItem
+from .use_item import UseItem
+from .buy_item import BuyItem
 
 
 __all__ = ['Start',
@@ -25,4 +30,9 @@ __all__ = ['Start',
            'You',
            'Restart',
            'Help',
-           'Exchange']
+           'Exchange',
+           'Backpack',
+           'ObserveItem',
+           'UseItem',
+           'BuyItem',
+           'Market']

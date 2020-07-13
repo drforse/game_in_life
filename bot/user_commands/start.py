@@ -15,6 +15,7 @@ class CreateCountryForm(StatesGroup):
 class Start(Command):
     needs_auth = False
     needs_reply_auth = False
+    needs_satiety_level = 0
     states_group = CreateCountryForm
 
     @classmethod

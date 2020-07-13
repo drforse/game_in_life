@@ -1,13 +1,14 @@
 from dataclasses import dataclass
 
-from models import User
-from pymongo.collection import ObjectId
+import config
+from senderman_roullette_api import SendermanRoulletteApi
 
 
 @dataclass
 class AllCurrenciesBalance:
     main: float = 0.0
     pasyucoin: float = 0.0
+    yulcoin: float = 0.0
 
     def __getitem__(self, item):
         return getattr(self, item)
@@ -15,16 +16,13 @@ class AllCurrenciesBalance:
 
 class Balance:
     def __init__(self,
-                 user_model_id: ObjectId = None):
-        self.user_model_id = user_model_id
+                 player: 'Player' = None):
+        self.player: 'Player' = player
 
     @property
     def main_currency_balance(self) -> float:
-        print(f'{self.user_model_id=}')
-        if self.user_model_id:
-            user = User.get(id=self.user_model_id)
-            return user.main_currency_balance
-        return 0.0
+        print(f'{self.player.id=}')
+        return self.player.model.main_currency_balance or 0.0
 
     @property
     def pasyucoin_currency_balance(self) -> float:
@@ -32,23 +30,30 @@ class Balance:
 
         return 0.0
 
+    @property
+    async def yulcoin_currency_balance(self) -> float:
+        api = SendermanRoulletteApi()
+        balance = await api.get_balance(self.player.tg_id)
+        return float(balance)
+
     async def get_all_currencies_balance(self) -> AllCurrenciesBalance:
         return AllCurrenciesBalance(main=self.main_currency_balance,
-                                    pasyucoin=self.pasyucoin_currency_balance)
+                                    pasyucoin=self.pasyucoin_currency_balance,
+                                    yulcoin=await self.yulcoin_currency_balance)
 
     async def add_money_to_main_currency_balance(self, value: float):
-        user = User.get(id=self.user_model_id)
+        user = self.player.model
         user.inc_main_currency_balance(value)
+
+    async def add_money_to_yulcoin_currency_balance(self, value: float):
+        token = config.SENDERMAN_SECURE_API_BOT_TOKEN
+        async with SendermanRoulletteApi(token) as api:
+            await api.update_coins(self.player.tg_id, round(value))
 
     async def add_money(self, currency: str, value: float):
         if currency == 'main':
             await self.add_money_to_main_currency_balance(value)
-        # waiting for api to finish
-        pass
-
-    def to_python(self):
-        return {"main_currency": self.main_currency_balance,
-                "pasyucoin_currency": self.pasyucoin_currency_balance}
-
-    def __str__(self):
-        return str(self.to_python())
+        elif currency == 'yulcoin':
+            await self.add_money_to_yulcoin_currency_balance(value)
+        else:
+            raise

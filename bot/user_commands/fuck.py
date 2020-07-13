@@ -4,6 +4,7 @@ from .base.action import BaseAction
 
 
 class Fuck(BaseAction):
+    needs_satiety_level = 65
 
     @classmethod
     async def execute(cls, m: Message):

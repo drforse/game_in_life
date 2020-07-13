@@ -15,7 +15,7 @@ class Queue:
         cls.is_running = True
         while cls.is_running:
             init = time.time()
-            users = User.objects(age__gte=0, age__lte=100)
+            users = UserModel.objects(age__gte=0, age__lte=100)
             logging.info(f'found {len(users)} users')
             for user in users:
                 logging.info(f'pass user {user.tg_id}')

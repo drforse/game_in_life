@@ -1,7 +1,7 @@
 from aiogram.types import Message
 
 from ..core import Command
-from models import SexGifs
+from models import SexGifsModel
 
 
 class AddSexGif(Command):
@@ -15,5 +15,5 @@ class AddSexGif(Command):
         gif = m.reply_to_message.animation
         sex_types = m.text.split()[1:]
         for sex_type in sex_types:
-            SexGifs.push_gif(sex_type, gif.file_id, gif.file_unique_id)
+            SexGifsModel.push_gif(sex_type, gif.file_id, gif.file_unique_id)
         await m.answer('Success')

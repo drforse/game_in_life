@@ -1,7 +1,7 @@
 from aiogram.types import Message
 
 from ..core import Command
-from models import DefaultUserpics
+from models import DefaultUserpicsModel
 
 
 class DelDefaultUserPic(Command):
@@ -13,5 +13,5 @@ class DelDefaultUserPic(Command):
         if not m.reply_to_message.photo:
             return
         photo = m.reply_to_message.photo
-        DefaultUserpics.pull_pic(photo_id=photo[0].file_id)
+        DefaultUserpicsModel.pull_pic(photo_id=photo[0].file_id)
         await m.answer('Success')

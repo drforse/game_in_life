@@ -8,6 +8,7 @@ class Command:
     bot = bot
     needs_auth = True
     needs_reply_auth = True
+    needs_satiety_level = 30
 
     @staticmethod
     async def execute(m: Message):

@@ -92,10 +92,10 @@ class Game:
     async def create_new_player(cls, m: Message, state: FSMContext,
                                 user_id: int, name: str, gender: str, photo_id: str = None):
 
-        old_user = User.get(tg_id=user_id)
+        old_user = UserModel.get(tg_id=user_id)
         chats = old_user.chats if old_user else []
 
-        user = User(tg_id=user_id, name=name, age=-1, gender=gender, photo_id=photo_id, chats=chats)
+        user = UserModel(tg_id=user_id, name=name, age=-1, gender=gender, photo_id=photo_id, chats=chats)
         user.save()
         text = 'Создан игрок с данными:\nИмя: %s\nПол: %s\nВозраст: 0\n' % (user.name, user.gender)
         if not await cls.get_users_availiable_for_children(user):
@@ -113,20 +113,20 @@ class Game:
     @staticmethod
     async def answer_inline_query_with_default_userpics(q: InlineQuery, state: FSMContext):
         default_user_photos = []
-        for num, photo_id in enumerate(DefaultUserpics.get().photo_ids):
+        for num, photo_id in enumerate(DefaultUserpicsModel.get().photo_ids):
             photo = InlineQueryResultCachedPhoto(id=str(num),
                                                  photo_file_id=photo_id)
             default_user_photos.append(photo)
         await q.answer(default_user_photos)
 
     @staticmethod
-    async def get_users_availiable_for_children(user: User):
+    async def get_users_availiable_for_children(user: UserModel):
         chats = user.chats
         result = []
         for chat in chats:
             females_in_marriage = []
             males_in_marriage = []
-            users_in_marriage = User.objects(__raw__={f'partners.{chat}': {'$exists': True},
+            users_in_marriage = UserModel.objects(__raw__={f'partners.{chat}': {'$exists': True},
                                                       'age': {'$lte': 0, '$gte': 100}})
             print('users_in_marriage', [u.tg_id for u in users_in_marriage])
             for u in users_in_marriage:
@@ -136,7 +136,7 @@ class Game:
                     males_in_marriage.append(u)
             females = []
             males = []
-            for user in User.objects(chats=chat, age__gte=12, age__lte=100):
+            for user in UserModel.objects(chats=chat, age__gte=12, age__lte=100):
                 if user.gender == 'female' and user not in females_in_marriage:
                     females.append(user)
                 elif user.gender == 'male' and user not in males_in_marriage:
@@ -155,10 +155,10 @@ class Game:
         return result
 
     @staticmethod
-    async def process_died_user(bot: Bot, player: typing.Union[int, User, Player]):
+    async def process_died_user(bot: Bot, player: typing.Union[int, UserModel, Player]):
         if isinstance(player, int):
             player = Player(tg_id=player)
-        elif isinstance(player, User):
+        elif isinstance(player, UserModel):
             player = Player(model=player)
         output = await player.die()
         for msg in output:

@@ -4,9 +4,8 @@ from aiogram import Bot
 import os
 
 API_TOKEN = os.environ['bot_token']
-print(API_TOKEN)
 DB_URL = os.environ['game_in_life_db_url']
-print(DB_URL)
+SENDERMAN_SECURE_API_BOT_TOKEN = os.environ['senderman_secure_api_bot_token']
 
 storage = MemoryStorage()
 bot = Bot(API_TOKEN, parse_mode='html')
@@ -18,4 +17,5 @@ DEVELOPERS = [879343317]
 SEX_DELAY_INTERVAL = (10, 120)
 
 CURRENCY_PRICES = {'pasyucoin': 0.5,
-                   'main': 1.0}
+                   'main': 1.0,
+                   'yulcoin': 0.5}

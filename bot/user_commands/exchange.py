@@ -12,26 +12,29 @@ from game.exceptions import *
 
 class Exchange(Command):
     needs_reply_auth = False
+    needs_satiety_level = 0
 
     @classmethod
     async def execute(cls, m: Message):
-        await m.answer('Команда временно неактивна')
-        return
+        # await m.answer('Команда временно неактивна')
+        # return
         player = Player(tg_id=m.from_user.id)
         exchange = ExchangeCore(client=player)
         try:
             currencies_naming_reference = {'pasyucoin': ['паюкоин', 'пасюкоины', 'pasyucoin', 'pasyucoins'],
-                                           'main': ['main', 'основная']}
-            possible_currencies_names = itertools.chain(*currencies_naming_reference.values())
+                                           'main': ['caffeine', 'caffeines', 'кофеин', 'кофеины'],
+                                           'yulcoin': ['yulcoin', 'yulcoins', 'юлькоин', 'юлькоины']}
+            possible_currencies_names = [i for i in itertools.chain(*currencies_naming_reference.values())]
+            print(possible_currencies_names)
             split = m.text.split()
             if len(split) == 1:
                 await m.answer('Шаблон: /exchange {from_currency} {to_currency} {value}\n'
                                f'Возможные значения валют: {", ".join(possible_currencies_names)}')
             split = split[1:]
-            if not re.match(r'.* .* [0-9]*$', ' '.join(split)):
+            if not re.match(r'.* .* -?[0-9]*$', ' '.join(split)):
                 await m.answer('Неверый формат! шаблон: /exchange {from_currency} {to_currency} {value}')
-            from_cur = split[0]
-            to_cur = split[1]
+            from_cur = split[0].lower()
+            to_cur = split[1].lower()
             if from_cur not in possible_currencies_names:
                 await m.answer(f'Мы не производим операций с {from_cur}, извините')
                 return
@@ -40,6 +43,7 @@ class Exchange(Command):
                 return
             logging.info(f'balance: {player.balance}')
             from_cur, to_cur = cls.resolve_currency(from_cur), cls.resolve_currency(to_cur)
+            print(from_cur, to_cur)
             await exchange.convert(from_cur, to_cur, float(split[2]))
             logging.info(f'balance after converting: {player.balance}')
             await m.answer('Операция успешна произведена.')
@@ -49,7 +53,8 @@ class Exchange(Command):
     @staticmethod
     def resolve_currency(currency) -> str:
         currencies_naming_reference = {'pasyucoin': ['паюкоин', 'пасюкоины', 'pasyucoin', 'pasyucoins'],
-                                       'main': ['main', 'основная']}
+                                       'main': ['caffeine', 'caffeines', 'кофеин', 'кофеины'],
+                                       'yulcoin': ['yulcoin', 'yulcoins', 'юлькоин', 'юлькоины']}
         for cur in currencies_naming_reference:
             if currency in currencies_naming_reference[cur]:
                 return cur

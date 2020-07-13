@@ -8,6 +8,7 @@ from game.types.player import Player
 class Restart(Command):
     needs_auth = False
     needs_reply_auth = False
+    needs_satiety_level = 0
 
     @classmethod
     async def execute(cls, m: Message):

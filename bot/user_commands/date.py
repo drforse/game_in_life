@@ -5,6 +5,7 @@ from game.types.player import *
 
 
 class Date(BaseAction):
+    needs_satiety_level = 15
 
     @staticmethod
     async def execute(m: Message):

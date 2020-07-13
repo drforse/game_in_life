@@ -10,6 +10,8 @@ from mongoengine.queryset.visitor import Q
 
 from models import *
 from .balance import Balance
+from .item import Item
+from ..exceptions import *
 
 
 class Player:
@@ -34,7 +36,7 @@ class Player:
 
     gender_emoji_reference = {'male': '♂️', 'female': '♀️', 'transgender': '♂️♀️'}
 
-    def __init__(self, model_id: ObjectId = None, tg_id: int = None, model: User = None):
+    def __init__(self, model_id: ObjectId = None, tg_id: int = None, model: UserModel = None):
         self.id = model_id
         self.tg_id = tg_id
         self.exists = False
@@ -48,20 +50,22 @@ class Player:
         self.lovers = None
         self.childs = None
         self.balance = Balance()
-        self.model = model
+        self.satiety = None
+        self.backpack = None
+        self.model: UserModel = model
         self.update_from_db(model)
 
     async def create(self, name, gender, age, chats=(), parents=()) -> Player:
-        model = User(tg_id=self.tg_id, name=name, gender=gender, age=age,
-                     chats=list(chats), parents=list(parents))
+        model = UserModel(tg_id=self.tg_id, name=name, gender=gender, age=age,
+                          chats=list(chats), parents=list(parents))
         model.save()
         self.update_from_db(model)
         return self
 
-    def update_from_db(self, model: User = None):
+    def update_from_db(self, model: UserModel = None):
         if not model:
             print(self.id, self.tg_id)
-            model = User.get(id=self.id) if self.id else User.get(tg_id=self.tg_id)
+            model = UserModel.get(id=self.id) if self.id else UserModel.get(tg_id=self.tg_id)
         self.model = model
         if not model:
             self.exists = False
@@ -77,7 +81,9 @@ class Player:
         self.partners = model.partners
         self.lovers = model.lovers
         self.childs = model.childs
-        self.balance = Balance(self.id)
+        self.balance = Balance(self)
+        self.satiety = model.satiety
+        self.backpack = model.backpack
         self.exists = True
 
     @property
@@ -92,7 +98,7 @@ class Player:
     async def join_chat(self, chat_tg_id):
         self.model.update(push__chats=chat_tg_id)
 
-    async def action(self, action: str, chat_id: int, partner: typing.Union[User, Player, int],
+    async def action(self, action: str, chat_id: int, partner: typing.Union[UserModel, Player, int],
                      delay: int = 300, custom_data: str = None, **kwargs) -> typing.AsyncGenerator:
         partner = await self.resolve_user(partner, 'Player')
         if action == 'fuck':
@@ -102,6 +108,13 @@ class Player:
         if action == 'marriage':
             return self.marry(chat_id, partner.tg_id)
         if action == 'custom':
+            self.satiety -= 20
+            partner.satiety -= 20
+
+            self.model.satiety = self.satiety
+            partner.model.satiety = partner.satiety
+            self.model.save()
+            partner.model.save()
             custom_data = await self.parse_data_for_custom_action(custom_data)
             return self.custom_action(custom_data['messages'], custom_data['delays'], **kwargs)
 
@@ -139,7 +152,7 @@ class Player:
 
     async def born(self, mother: Player, father: Player, chat: typing.Union[Country, int]):
         if isinstance(chat, Country):
-            chat = Group.chat_tg_id
+            chat = GroupModel.chat_tg_id
         self.model.delete()
         child = self
         child = await child.create(name=self.name, gender=self.gender, age=0,
@@ -233,6 +246,13 @@ class Player:
         text = ('Поздавляем <a href="tg://user?id=%d">%s</a> и <a href="tg://user?id=%d">%s</a> со свадьбой' %
                 (self.tg_id, self.name, partner.tg_id, partner.name))
         yield {'content_type': 'text', 'content': text}
+        self.satiety -= 25
+        partner.satiety -= 25
+
+        self.model.satiety = self.satiety
+        partner.model.satiety = partner.satiety
+        self.model.save()
+        partner.model.save()
 
     async def date(self, chat_tg_id: int, lover_tg_id: int):
         lover = Player(tg_id=lover_tg_id)
@@ -246,6 +266,13 @@ class Player:
         text = ('<a href="tg://user?id=%d">%s</a> и <a href="tg://user?id=%d">%s</a> теперь встречаются' %
                 (self.tg_id, self.name, lover.tg_id, lover.name))
         yield {'content_type': 'text', 'content': text}
+        self.satiety -= 10
+        lover.satiety -= 10
+
+        self.model.satiety = self.satiety
+        lover.model.satiety = lover.satiety
+        self.model.save()
+        lover.model.save()
 
     async def can_marry(self, chat_tg_id: int, partner: Player) -> typing.Dict:
         """
@@ -293,19 +320,19 @@ class Player:
 
         return {'result': True, 'reason': ''}
 
-    async def divorce(self, chat_tg_id: int, partner: typing.Union[User, Player, int] = None):
+    async def divorce(self, chat_tg_id: int, partner: typing.Union[UserModel, Player, int] = None):
         if partner:
             partner_model = await self.resolve_user(partner, 'User')
         else:
-            partner_model = User(id=self.model.partners[str(chat_tg_id)])
+            partner_model = UserModel(id=self.model.partners[str(chat_tg_id)])
         self.model.unset_partner(chat_tg_id)
         partner_model.unset_partner(chat_tg_id)
 
-    async def break_up(self, chat_tg_id: int, lover: typing.Union[User, Player, int] = None):
+    async def break_up(self, chat_tg_id: int, lover: typing.Union[UserModel, Player, int] = None):
         if lover:
             lover_model = await self.resolve_user(lover, 'User')
         else:
-            lover_model = User(id=self.model.lovers[str(chat_tg_id)])
+            lover_model = UserModel(id=self.model.lovers[str(chat_tg_id)])
         self.model.unset_lover(chat_tg_id)
         lover_model.unset_lover(chat_tg_id)
 
@@ -356,15 +383,24 @@ class Player:
                             )
             child = Player(model=child)
             await Player.born(child, mother, father, chat_id)
+            mother.satiety -= 60
+            father.satiety -= 30
 
         yield {'content_type': 'text', 'content': end_message}
 
         possible_gifs = await self.get_possible_cum_sex_gifs(sex_type, universal_sex_type)
         if possible_gifs:
             yield {'content_type': 'animation', 'content': random.choice(possible_gifs)}
+        self.satiety -= 20
+        partner.satiety -= 20
+
+        self.model.satiety = self.satiety
+        partner.model.satiety = partner.satiety
+        self.model.save()
+        partner.model.save()
 
     async def get_child_and_parents(self, chat_id: int,
-                                    partner: Player) -> typing.Dict[str, typing.Union[User, Player]]:
+                                    partner: Player) -> typing.Dict[str, typing.Union[UserModel, Player]]:
         child = None
         female = self if self.gender == 'female' else partner if partner.gender == 'female' else None
         male = self if self.gender == 'male' else partner if partner.gender == 'male' else None
@@ -407,7 +443,7 @@ class Player:
 
     @staticmethod
     async def get_possible_sex_gifs(sex_type: str, universal_sex_type: str) -> list:
-        possible_gif_models = SexGifs.objects(Q(type=sex_type) | Q(type=universal_sex_type))
+        possible_gif_models = SexGifsModel.objects(Q(type=sex_type) | Q(type=universal_sex_type))
         possible_gifs = []
         for model in possible_gif_models:
             possible_gifs += [gifdict['file_id'] for gifdict in model.gif_ids]
@@ -415,23 +451,23 @@ class Player:
 
     @staticmethod
     async def get_possible_cum_sex_gifs(sex_type: str, universal_sex_type: str) -> list:
-        possible_gif_models = CumSexGifs.objects(Q(type=sex_type) | Q(type=universal_sex_type))
+        possible_gif_models = CumSexGifsModel.objects(Q(type=sex_type) | Q(type=universal_sex_type))
         possible_gifs = []
         for model in possible_gif_models:
             possible_gifs += [gifdict['file_id'] for gifdict in model.gif_ids]
         return possible_gifs
 
     @staticmethod
-    async def resolve_user(user: typing.Union[User, Player, int], result_type: str = 'Player'):
+    async def resolve_user(user: typing.Union[UserModel, Player, int], result_type: str = 'Player'):
         user_type = type(user)
         if user_type == Player:
             if result_type == 'Player':
                 return user
             model = user.model
-        elif user_type == User:
+        elif user_type == UserModel:
             model = user
         elif user_type == int:
-            model = User.get(tg_id=user, age__gte=0, age__lte=100)
+            model = UserModel.get(tg_id=user, age__gte=0, age__lte=100)
         else:
             raise TypeError('partner arg type must be User, Player or int')
 
@@ -439,6 +475,18 @@ class Player:
             return Player(model=model)
         elif result_type == 'User':
             return model
+
+    async def use(self, item: Item, target):
+        item_id = str(item.id)
+        if item_id not in self.backpack:
+            raise NoItemInBuildpack
+        if self.backpack[item_id] <= 0:
+            raise NotEnoughItems
+        self.backpack[item_id] -= 1
+        self.model.save()
+        loop = asyncio.get_event_loop()
+        for e in item.effects:
+            loop.create_task(e.apply(target))
 
 
 class Country:
@@ -449,8 +497,8 @@ class Country:
         self.exists = False
         self.update_from_db()
 
-    def update_from_db(self, model: Group = None):
-        model = model or Group.get(chat_tg_id=self.chat_tg_id)
+    def update_from_db(self, model: GroupModel = None):
+        model = model or GroupModel.get(chat_tg_id=self.chat_tg_id)
         if not model:
             self.exists = False
             return
@@ -459,14 +507,14 @@ class Country:
         self.exists = True
 
     async def create(self, name: str) -> Country:
-        model = Group(chat_tg_id=self.chat_tg_id, name=name)
+        model = GroupModel(chat_tg_id=self.chat_tg_id, name=name)
         model.save()
         self.update_from_db(model)
         self.exists = True
         return self
 
-    async def get_childs_queue(self) -> typing.Optional[typing.Iterable[User]]:
-        return User.objects(age=-1, chats=self.chat_tg_id)
+    async def get_childs_queue(self) -> typing.Optional[typing.Iterable[UserModel]]:
+        return UserModel.objects(age=-1, chats=self.chat_tg_id)
 
 
 class Eva:

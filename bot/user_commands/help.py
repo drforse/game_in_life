@@ -6,6 +6,7 @@ from ..core import Command
 class Help(Command):
     needs_auth = False
     needs_reply_auth = False
+    needs_satiety_level = 0
 
     @classmethod
     async def execute(cls, m: Message):

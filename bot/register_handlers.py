@@ -57,3 +57,13 @@ def register_handlers():
     Help.register()
 
     Exchange.register()
+
+    Backpack.register()
+
+    Market.register()
+
+    ObserveItem.reg_callback(None, lambda c: c.data.startswith('item observe '))
+
+    UseItem.reg_callback(None, lambda c: c.data.startswith('item use '))
+
+    BuyItem.reg_callback(None, lambda c: c.data.startswith('item buy '))

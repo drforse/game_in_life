@@ -11,7 +11,8 @@ from config import GAME_SPEED
 class MyDocument:
 
     @classmethod
-    def get(cls, **kwargs) -> typing.Union['User', None]:
+    def get(cls, **kwargs) -> typing.Union[
+        'UserModel', 'GroupModel', 'SexGifsModel', 'CumSexGifsModel', 'DefaultUserpicsModel', Document, None]:
         """
         get object or None
         :param kwargs:
@@ -22,7 +23,8 @@ class MyDocument:
             return queryset_[0]
 
 
-class User(Document, MyDocument):
+class UserModel(Document, MyDocument):
+    meta = {'collection': 'user'}
     tg_id = IntField(required=True)
     name = StringField(required=True)
     gender = StringField(required=True)  # male, female, transgender
@@ -34,6 +36,8 @@ class User(Document, MyDocument):
     lovers = DictField(default={})  # {chat_id: lover_id}
     childs = DictField(default={})  # {chat_id: List[child_id]}
     parents = ListField(default=[])
+    satiety = FloatField(default=100, max_value=100, min_value=0, required=True)
+    backpack = DictField(default={}, required=True)
 
     def update_age(self, age: int = None):
         logging.info(f'update age of user {self.tg_id}')
@@ -85,12 +89,24 @@ class User(Document, MyDocument):
         self.save()
 
 
-class Group(Document, MyDocument):
+class ItemModel(Document, MyDocument):
+    meta = {'collection': 'item'}
+    name = StringField(required=True)
+    price = FloatField(required=True)
+    emoji = StringField()
+    type = StringField(required=True)
+    weight = FloatField(default=1.0, required=True)
+    effects = ListField()
+
+
+class GroupModel(Document, MyDocument):
+    meta = {'collection': 'group'}
     chat_tg_id = IntField(required=True)
     name = StringField(required=True)
 
 
-class SexGifs(Document, MyDocument):
+class SexGifsModel(Document, MyDocument):
+    meta = {'collection': 'sex_gifs'}
     type = StringField(required=True, unique=True)  # hetero, lesbian, gay, masturbate, universal
     gif_ids = ListField(required=True)
 
@@ -113,10 +129,11 @@ class SexGifs(Document, MyDocument):
                                     'file_unique_id': gif_unique_id})
 
 
-class CumSexGifs(Document, MyDocument):
+class CumSexGifsModel(Document, MyDocument):
     """
     same as SexGifs, but different collection
     """
+    meta = {'collection': 'cum_sex_gifs'}
     type = StringField(required=True, unique=True)  # hetero, lesbian, gay, masturbate, universal
     gif_ids = ListField(required=True)
 
@@ -139,8 +156,9 @@ class CumSexGifs(Document, MyDocument):
                                     'file_unique_id': gif_unique_id})
 
 
-class DefaultUserpics(Document, MyDocument):
+class DefaultUserpicsModel(Document, MyDocument):
     photo_ids = ListField()
+    meta = {'collection': 'default_userpics'}
 
     @classmethod
     def push_pic(cls, photo_id: str):
@@ -153,8 +171,8 @@ class DefaultUserpics(Document, MyDocument):
         model.update(pull__photo_ids=photo_id)
 
 
-__all__ = ['User',
-           'Group',
-           'SexGifs',
-           'CumSexGifs',
-           'DefaultUserpics']
+__all__ = ['UserModel',
+           'GroupModel',
+           'SexGifsModel',
+           'CumSexGifsModel',
+           'DefaultUserpicsModel']

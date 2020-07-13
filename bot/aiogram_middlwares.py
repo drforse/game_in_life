@@ -21,6 +21,8 @@ class AuthMiddlware(BaseMiddleware):
         else:
             return
 
+        main_player = Player(tg_id=m.from_user.id)
+
         user_commands_dict = {value.__name__.lower(): value for key, value
                               in user_commands.__dict__.items() if type(value) == type}
         dev_commands_dict = {value.__name__.lower(): value for key, value
@@ -43,9 +45,13 @@ class AuthMiddlware(BaseMiddleware):
                 except:
                     pass
                 raise CancelHandler
+            if main_player.satiety < user_command.needs_satiety_level:
+                await m.answer(f'Вы слишком голодны! Нужный уровень сытости - {user_command.needs_satiety_level}, '
+                               f'ваш уровень сытости - {round(main_player.satiety)}.')
+                raise CancelHandler
 
         for user in users_to_auth:
-            player = Player(tg_id=user)
+            player = Player(tg_id=user) if user != main_player.tg_id else main_player
             member = await m.bot.get_chat_member(m.chat.id, user)
             if not player.exists:
                 try:
