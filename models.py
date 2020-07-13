@@ -37,7 +37,7 @@ class UserModel(Document, MyDocument):
     childs = DictField(default={})  # {chat_id: List[child_id]}
     parents = ListField(default=[])
     satiety = FloatField(default=100, max_value=100, min_value=0, required=True)
-    backpack = DictField(default={}, required=True)
+    backpack = DictField(default={})
 
     def update_age(self, age: int = None):
         logging.info(f'update age of user {self.tg_id}')
