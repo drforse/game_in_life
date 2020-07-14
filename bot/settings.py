@@ -9,7 +9,7 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from config import API_TOKEN
 from .aiogram_middlwares import AuthMiddlware
 
-PATH = Path("C:/Users/admin/Desktop/projects/game_in_life_bot")
+PATH = Path.cwd()
 PROJECT_NAME = "bot"
 pr: Project = Project(PROJECT_NAME, PATH)
 struc: ProjectStructure = ProjectStructure(pr)
