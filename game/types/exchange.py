@@ -12,7 +12,6 @@ class Exchange:
     async def convert(self, from_currency: str, to_currency: str, value: float):
         all_currencies_balance = await self.client.balance.get_all_currencies_balance()
         from_currency_balance = all_currencies_balance[from_currency]
-        print(from_currency_balance)
         if value > from_currency_balance:
             raise NotEnoughMoneyOnBalance(requested_value=value,
                                           available_value=from_currency_balance)

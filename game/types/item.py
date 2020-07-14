@@ -35,11 +35,9 @@ class Item(GameInLifeDbBaseObject):
     async def buy(self, buyer: 'Player', quantity: int = 1):
         if self.price * quantity > buyer.balance.main_currency_balance:
             raise NotEnoughMoneyOnBalance
-        print(buyer.model.to_mongo())
         item_id = str(self.id)
         current_quantity = buyer.backpack.get(item_id) or 0
         buyer.backpack[item_id] = current_quantity + quantity
         buyer.model.backpack[item_id] = current_quantity + quantity
         buyer.model.main_currency_balance -= self.price * quantity
-        print(buyer.model.to_mongo())
         buyer.model.save()

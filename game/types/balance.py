@@ -21,7 +21,6 @@ class Balance:
 
     @property
     def main_currency_balance(self) -> float:
-        print(f'{self.player.id=}')
         return self.player.model.main_currency_balance or 0.0
 
     @property

@@ -29,7 +29,6 @@ class BaseAction(UserCommandView):
         if re.match(cls.custom_action_pattern, m.text):
             async with config.dp.current_state(chat=m.chat.id, user=m.from_user.id).proxy() as dt:
                 dt['action'] = action
-                print(m.text.split('|', maxsplit=1)[1].strip())
                 dt['messages_and_delays'] = m.text.split('|', maxsplit=1)[1].strip()
 
         player = Player(tg_id=m.from_user.id)

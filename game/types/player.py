@@ -64,7 +64,6 @@ class Player:
 
     def update_from_db(self, model: UserModel = None):
         if not model:
-            print(self.id, self.tg_id)
             model = UserModel.get(id=self.id) if self.id else UserModel.get(tg_id=self.tg_id)
         self.model = model
         if not model:
