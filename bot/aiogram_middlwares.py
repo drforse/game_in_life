@@ -3,7 +3,7 @@ from aiogram.dispatcher.handler import CancelHandler
 from aiogram.types import Message, CallbackQuery
 import logging
 
-from bot import user_commands, dev_commands
+from .views.base import UserCommandView, DevCommandView
 from game.types.player import Player
 from config import *
 
@@ -23,10 +23,8 @@ class AuthMiddlware(BaseMiddleware):
 
         main_player = Player(tg_id=m.from_user.id)
 
-        user_commands_dict = {value.__name__.lower(): value for key, value
-                              in user_commands.__dict__.items() if type(value) == type}
-        dev_commands_dict = {value.__name__.lower(): value for key, value
-                             in dev_commands.__dict__.items() if type(value) == type}
+        user_commands_dict = {view.__name__.lower(): view for view in UserCommandView.__subclasses__()}
+        dev_commands_dict = {view.__name__.lower(): view for view in DevCommandView.__subclasses__()}
         user_command = user_commands_dict.get(command_text)
         dev_command = dev_commands_dict.get(command_text)
         if not user_command and not dev_command:
