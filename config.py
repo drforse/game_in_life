@@ -19,3 +19,5 @@ SEX_DELAY_INTERVAL = (10, 120)
 CURRENCY_PRICES = {'pasyucoin': 0.5,
                    'main': 1.0,
                    'yulcoin': 0.5}
+
+CHARACTERISTIC_VALUE_LIMITS = {'satiety': {'max': 100, 'min': 0}}

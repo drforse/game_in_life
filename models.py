@@ -5,7 +5,7 @@ import typing
 from mongoengine import *
 from bson.objectid import ObjectId
 
-from config import GAME_SPEED
+from config import GAME_SPEED, CHARACTERISTIC_VALUE_LIMITS
 
 
 class MyDocument:
@@ -36,7 +36,10 @@ class UserModel(Document, MyDocument):
     lovers = DictField(default={})  # {chat_id: lover_id}
     childs = DictField(default={})  # {chat_id: List[child_id]}
     parents = ListField(default=[])
-    satiety = FloatField(default=100, max_value=100, min_value=0, required=True)
+    satiety = FloatField(default=100,
+                         max_value=CHARACTERISTIC_VALUE_LIMITS['satiety']['max'],
+                         min_value=CHARACTERISTIC_VALUE_LIMITS['satiety']['min'],
+                         required=True)
     backpack = DictField(default={})
 
     def update_age(self, age: int = None):
