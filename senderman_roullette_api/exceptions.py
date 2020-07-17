@@ -3,7 +3,17 @@ class BadRequest(Exception):
         self.txt = txt
 
 
-class UserDoesNotExist(Exception):
+class UserNotFound(Exception):
+    def __init__(self, txt=None):
+        self.txt = txt
+
+
+class Unauthorized(Exception):
+    def __init__(self, txt=None):
+        self.txt = txt
+
+
+class NotEnoughCoinsRemaining(Exception):
     def __init__(self, txt=None):
         self.txt = txt
 

@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 import config
 from senderman_roullette_api import SendermanRoulletteApi
+from ..exceptions import *
 
 
 @dataclass
@@ -31,8 +32,8 @@ class Balance:
 
     @property
     async def yulcoin_currency_balance(self) -> float:
-        api = SendermanRoulletteApi()
-        balance = await api.get_balance(self.player.tg_id)
+        async with SendermanRoulletteApi() as api:
+            balance = await api.get_balance(self.player.tg_id)
         return float(balance) if balance else None
 
     async def get_all_currencies_balance(self) -> AllCurrenciesBalance:
@@ -55,4 +56,4 @@ class Balance:
         elif currency == 'yulcoin':
             await self.add_money_to_yulcoin_currency_balance(value)
         else:
-            raise
+            raise CurrencyDoesNotExist(currency)

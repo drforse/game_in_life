@@ -21,9 +21,9 @@ class Exchange(UserCommandView):
         # return
         player = Player(tg_id=m.from_user.id)
         exchange = ExchangeCore(client=player)
-        currencies_naming_reference = {'pasyucoin': ['паюкоин', 'пасюкоины', 'pasyucoin', 'pasyucoins'],
-                                       'main': ['caffeine', 'caffeines', 'кофеин', 'кофеины'],
+        currencies_naming_reference = {'main': ['caffeine', 'caffeines', 'кофеин', 'кофеины'],
                                        'yulcoin': ['yulcoin', 'yulcoins', 'юлькоин', 'юлькоины']}
+        # 'pasyucoin': ['паюкоин', 'пасюкоины', 'pasyucoin', 'pasyucoins'],
         possible_currencies_names = [i for i in itertools.chain(*currencies_naming_reference.values())]
         split = m.text.split()
         if len(split) == 1:
@@ -48,17 +48,23 @@ class Exchange(UserCommandView):
             await m.answer('Операция успешна произведена.')
         except NotEnoughMoneyOnBalance:
             await m.answer('Недостаточно денег на балансе.')
-        except senderman_roullette_api.exceptions.UserDoesNotExist:
+        except CurrencyDoesNotExist as e:
+            logging.error(f'currency {e.txt} doesn\'t exist, this exceptions should never be raised, strange!')
+            await m.answer(f'Мы не производим операций с {e.txt}, извините')
+        except senderman_roullette_api.exceptions.UserNotFound:
             await m.answer('У Вас нет счета в юлькоинах, чтобы его открыть, зайдите в @miniroulette_bot')
-        except senderman_roullette_api.exceptions.BadRequest:
+        except senderman_roullette_api.exceptions.BadRequest as e:
+            logging.error(e.txt or e)
             await m.answer('Обмен валют из/в юлюкоины временно недоступен. '
                            'Если недоступность длится слишком долго, feel free to contact @dr_fxrse')
+        except senderman_roullette_api.exceptions.NotEnoughCoinsRemaining:
+            await m.answer('На балансе должно оставаться хотя бы 400 юлькоинов!')
 
     @staticmethod
     def resolve_currency(currency) -> str:
-        currencies_naming_reference = {'pasyucoin': ['паюкоин', 'пасюкоины', 'pasyucoin', 'pasyucoins'],
-                                       'main': ['caffeine', 'caffeines', 'кофеин', 'кофеины'],
+        currencies_naming_reference = {'main': ['caffeine', 'caffeines', 'кофеин', 'кофеины'],
                                        'yulcoin': ['yulcoin', 'yulcoins', 'юлькоин', 'юлькоины']}
+        # 'pasyucoin': ['паюкоин', 'пасюкоины', 'pasyucoin', 'pasyucoins'],
         for cur in currencies_naming_reference:
             if currency in currencies_naming_reference[cur]:
                 return cur
