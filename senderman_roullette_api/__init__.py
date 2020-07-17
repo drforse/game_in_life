@@ -18,8 +18,6 @@ class SendermanRoulletteApi:
         result = await self._session.get(url)
         result = await self._get_result_or_raise(result, 'getBalance', user_id=user_id)
         coins = result['coins']
-        if coins == -1:
-            return None
         return coins
 
     async def update_coins(self, user_id: int, coins: int):

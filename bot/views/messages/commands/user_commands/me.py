@@ -77,7 +77,7 @@ class Me(UserCommandView):
         # pasyucoin_balance = player.balance.pasyucoin_currency_balance
         try:
             yulcoin_balance = await player.balance.yulcoin_currency_balance
-        except sexcs.BadRequest:
+        except (sexcs.UserNotFound, sexcs.SendermanRoulleteApiException):
             yulcoin_balance = None
         text += 'Баланс💰:\n'
         text += '   Кофеины (осн. вал.): ☕%s\n' % round(player.balance.main_currency_balance, 2)
@@ -115,7 +115,7 @@ class Me(UserCommandView):
         # pasyucoin_balance = player.balance.pasyucoin_currency_balance
         try:
             yulcoin_balance = await player.balance.yulcoin_currency_balance
-        except sexcs.BadRequest:
+        except (sexcs.UserNotFound, sexcs.SendermanRoulleteApiException):
             yulcoin_balance = None
         text += 'Баланс💰:\n'
         text += '   Кофеины (осн. вал.): ☕%s\n' % round(player.balance.main_currency_balance, 2)
