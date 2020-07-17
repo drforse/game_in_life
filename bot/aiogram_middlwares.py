@@ -43,7 +43,7 @@ class AuthMiddlware(BaseMiddleware):
                 except:
                     pass
                 raise CancelHandler
-            if main_player.satiety and main_player.satiety < user_command.needs_satiety_level:
+            if main_player.exists and main_player.alive and main_player.satiety and main_player.satiety < user_command.needs_satiety_level:
                 await m.answer(f'Вы слишком голодны! Нужный уровень сытости - {user_command.needs_satiety_level}, '
                                f'ваш уровень сытости - {round(main_player.satiety)}.')
                 raise CancelHandler
