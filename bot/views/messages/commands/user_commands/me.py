@@ -2,6 +2,7 @@ from aiogram.types import Message
 
 from bot.views.base import UserCommandView
 from game.types.player import Player, Eva, Adam
+from senderman_roullette_api import exceptions as sexcs
 
 
 class Me(UserCommandView):
@@ -74,7 +75,10 @@ class Me(UserCommandView):
             text += '\n'
 
         # pasyucoin_balance = player.balance.pasyucoin_currency_balance
-        yulcoin_balance = await player.balance.yulcoin_currency_balance
+        try:
+            yulcoin_balance = await player.balance.yulcoin_currency_balance
+        except sexcs.BadRequest:
+            yulcoin_balance = None
         text += 'Баланс💰:\n'
         text += '   Кофеины (осн. вал.): ☕%s\n' % round(player.balance.main_currency_balance, 2)
         if yulcoin_balance is not None:
@@ -109,7 +113,10 @@ class Me(UserCommandView):
         text += '\n'
 
         # pasyucoin_balance = player.balance.pasyucoin_currency_balance
-        yulcoin_balance = await player.balance.yulcoin_currency_balance
+        try:
+            yulcoin_balance = await player.balance.yulcoin_currency_balance
+        except sexcs.BadRequest:
+            yulcoin_balance = None
         text += 'Баланс💰:\n'
         text += '   Кофеины (осн. вал.): ☕%s\n' % round(player.balance.main_currency_balance, 2)
         if yulcoin_balance is not None:
