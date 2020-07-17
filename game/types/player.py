@@ -57,7 +57,7 @@ class Player:
 
     async def create(self, name, gender, age, chats=(), parents=()) -> Player:
         model = UserModel(tg_id=self.tg_id, name=name, gender=gender, age=age,
-                          chats=list(chats), parents=list(parents))
+                          chats=list(chats), parents=list(parents), photo_id=self.photo_id)
         model.save()
         self.update_from_db(model)
         return self
@@ -381,7 +381,7 @@ class Player:
                                                                   child.name)
                             )
             child = Player(model=child)
-            await Player.born(child, mother, father, chat_id)
+            await child.born(mother, father, chat_id)
             mother.satiety -= 60
             father.satiety -= 30
 
