@@ -51,7 +51,7 @@ class Exchange(UserCommandView):
         except senderman_roullette_api.exceptions.UserDoesNotExist:
             await m.answer('У Вас нет счета в юлькоинах, чтобы его открыть, зайдите в @miniroulette_bot')
         except senderman_roullette_api.exceptions.BadRequest:
-            await m.answer('Обмен валют временно недоступен. '
+            await m.answer('Обмен валют из/в юлюкоины временно недоступен. '
                            'Если недоступность длится слишком долго, feel free to contact @dr_fxrse')
 
     @staticmethod
