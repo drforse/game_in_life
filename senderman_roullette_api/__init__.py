@@ -47,7 +47,7 @@ class SendermanRoulletteApi:
             log = f'{request_path} request was unseccessful, 404, {result.get("message")}'
             logging.error(log + log_append)
             raise UserNotFound(result.get('message'))
-        elif response.status == 400 and result.get('message') == 'Not enough coins will remain on balance (must be at least 400)':
+        elif response.status == 403 and result.get('message') == 'Not enough coins will remain on balance (must be at least 400)':
             log = f'{request_path} request was unsuccessfull, 400, {result.get("message")}'
             logging.error(log + log_append)
             raise NotEnoughCoinsRemaining(result.get('message'))
