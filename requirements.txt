@@ -1,5 +1,5 @@
-aiogram==2.8
--e git://github.com/drforse/aiogram_oop_framework@8b6a018aa4a46fa6e0d64756fbc47bbbdff89215#egg=aiogram_oop_framework
+aiogram==2.9.2
+aiogram-oop-framework==0.0.2
 aiohttp==3.6.2
 async-timeout==3.0.1
 attrs==19.3.0
