@@ -22,7 +22,7 @@ class UseItem(CallbackQueryView):
             return
         await player.use(item, player, quantity)
 
-        text = f'Вы использовали {item.name}{item.emoji or ""}\nНаложенные эффекты:\n'
+        text = f'Вы использовали {quantity} {item.name}{item.emoji or ""}\nНаложенные эффекты:\n'
         for effect in item.effects:
             if effect.type == "increase":
                 type_f = "+ "
