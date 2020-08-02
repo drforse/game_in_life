@@ -475,17 +475,18 @@ class Player:
         elif result_type == 'User':
             return model
 
-    async def use(self, item: Item, target):
+    async def use(self, item: Item, target, quantity: int = 1):
         item_id = str(item.id)
         if item_id not in self.backpack:
             raise NoItemInBuildpack
-        if self.backpack[item_id] <= 0:
+        if self.backpack[item_id] < quantity:
             raise NotEnoughItems
-        self.backpack[item_id] -= 1
-        self.model.save()
-        loop = asyncio.get_event_loop()
-        for e in item.effects:
-            loop.create_task(e.apply(target))
+        for i in range(quantity):
+            self.backpack[item_id] -= 1
+            self.model.save()
+            loop = asyncio.get_event_loop()
+            for e in item.effects:
+                loop.create_task(e.apply(target))
 
 
 class Country:

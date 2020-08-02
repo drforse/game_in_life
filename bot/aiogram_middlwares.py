@@ -43,14 +43,13 @@ class AuthMiddlware(BaseMiddleware):
                 except:
                     pass
                 raise CancelHandler
-            if main_player.exists and main_player.alive and main_player.satiety and main_player.satiety < user_command.needs_satiety_level:
-                await m.answer(f'Вы слишком голодны! Нужный уровень сытости - {user_command.needs_satiety_level}, '
-                               f'ваш уровень сытости - {round(main_player.satiety)}.')
-                raise CancelHandler
 
         for user in users_to_auth:
             player = Player(tg_id=user) if user != main_player.tg_id else main_player
             member = await m.bot.get_chat_member(m.chat.id, user)
+            if m.chat.type in ['group', 'supergroup'] and m.chat.id not in player.chats:
+                await player.join_chat(m.chat.id)
+
             if not player.exists:
                 try:
                     await m.answer('<a href="tg://user?id=%s">%s</a> не играет.' %
@@ -58,14 +57,16 @@ class AuthMiddlware(BaseMiddleware):
                 except:
                     pass
                 raise CancelHandler
-            if m.chat.type in ['group', 'supergroup'] and m.chat.id not in player.chats:
-                await player.join_chat(m.chat.id)
             if not player.alive:
                 try:
                     await m.answer('<a href="tg://user?id=%s">%s</a> мёртв.' %
                                    (player.tg_id, member.user.first_name or member.user.last_name))
                 except:
                     pass
+                raise CancelHandler
+            if player.satiety and player.satiety < user_command.needs_satiety_level:
+                await m.answer(f'{player.name} слишком голоден! Нужный уровень сытости - {user_command.needs_satiety_level}, '
+                               f'ваш уровень сытости - {round(main_player.satiety)}.')
                 raise CancelHandler
 
     async def on_process_callback_query(self, c: CallbackQuery, data: dict = None):

@@ -47,4 +47,4 @@ class GameInLifeDbBaseObject:
 
     @staticmethod
     def _resolve_field_from_db(name, value):
-        return values
+        return value

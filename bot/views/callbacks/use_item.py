@@ -13,9 +13,14 @@ class UseItem(CallbackQueryView):
     async def execute(cls, c: CallbackQuery):
         item_id = c.data.split()[-2]
         item = Item(id=item_id)
+        quantity = int(c.message.reply_markup.inline_keyboard[0][1].callback_data.split()[-2])
 
         player = Player(tg_id=c.from_user.id)
-        await player.use(item, player)
+        player_quant = player.backpack[item_id]
+        if player_quant < quantity:
+            await c.answer(f'У вас столько нет :/\nВаше кол-во: {player_quant}', show_alert=True)
+            return
+        await player.use(item, player, quantity)
 
         text = f'Вы использовали {item.name}{item.emoji or ""}\nНаложенные эффекты:\n'
         for effect in item.effects:
@@ -24,5 +29,6 @@ class UseItem(CallbackQueryView):
             elif effect.type == "decrease":
                 type_f = "- "
 
-            text += f'  {type_f} {effect.target_characteristic} {effect.strength} ({effect.duration} секунд)\n'
+            text += f'  {type_f} {effect.target_characteristic} {effect.strength * quantity}' \
+                    f' ({effect.duration * quantity} секунд)\n'
         await c.message.edit_text(text, reply_markup=None)
