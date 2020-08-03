@@ -97,6 +97,9 @@ class Player:
     async def join_chat(self, chat_tg_id):
         self.model.update(push__chats=chat_tg_id)
 
+    async def leave_chat(self, chat_tg_id):
+        self.model.update(pull__chats=chat_tg_id)
+
     async def action(self, action: str, chat_id: int, partner: typing.Union[UserModel, Player, int],
                      delay: int = 300, custom_data: str = None, **kwargs) -> typing.AsyncGenerator:
         partner = await self.resolve_user(partner, 'Player')

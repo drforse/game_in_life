@@ -32,7 +32,7 @@ class Game:
         user = UserModel(tg_id=user_id, name=name, age=-1, gender=gender, photo_id=photo_id, chats=chats)
         user.save()
         text = 'Создан игрок с данными:\nИмя: %s\nПол: %s\nВозраст: 0\n' % (user.name, user.gender)
-        if not await cls.get_users_availiable_for_children(user):
+        if not await cls.get_users_availiable_for_children(user, m.bot):
             text += 'Родители: Ева, Адам\n'
             user.parents = ['0', '0']
             user.age = 0
@@ -44,14 +44,14 @@ class Game:
         await m.answer_photo(user.photo_id, text, reply_markup=ReplyKeyboardRemove())
 
     @staticmethod
-    async def get_users_availiable_for_children(user: UserModel):
+    async def get_users_availiable_for_children(user: UserModel, bot: Bot):
         chats = user.chats
         result = []
         for chat in chats:
             females_in_marriage = []
             males_in_marriage = []
             users_in_marriage = UserModel.objects(__raw__={f'partners.{chat}': {'$exists': True},
-                                                      'age': {'$lte': 0, '$gte': 100}})
+                                                           'age': {'$lte': 0, '$gte': 100}})
             for u in users_in_marriage:
                 if u.gender == 'female':
                     females_in_marriage.append(u)
@@ -60,6 +60,10 @@ class Game:
             females = []
             males = []
             for user in UserModel.objects(chats=chat, age__gte=12, age__lte=100):
+                member = await bot.get_chat_member(chat, user.tg_id)
+                if member.status in ['left', 'kicked']:
+                    user.update(pull__chats=chat)
+                    continue
                 if user.gender == 'female' and user not in females_in_marriage:
                     females.append(user)
                 elif user.gender == 'male' and user not in males_in_marriage:
@@ -73,7 +77,6 @@ class Game:
                 males = males[:len(females)]
 
             result += females + males
-
         return result
 
     @staticmethod

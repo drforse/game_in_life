@@ -22,6 +22,8 @@ class AuthMiddlware(BaseMiddleware):
             return
 
         main_player = Player(tg_id=m.from_user.id)
+        if m.chat.type in ['group', 'supergroup'] and m.chat.id not in main_player.chats:
+            await main_player.join_chat(m.chat.id)
 
         user_commands_dict = {view.__name__.lower(): view for view in UserCommandView.__subclasses__()}
         dev_commands_dict = {view.__name__.lower(): view for view in DevCommandView.__subclasses__()}
@@ -47,8 +49,6 @@ class AuthMiddlware(BaseMiddleware):
         for user in users_to_auth:
             player = Player(tg_id=user) if user != main_player.tg_id else main_player
             member = await m.bot.get_chat_member(m.chat.id, user)
-            if m.chat.type in ['group', 'supergroup'] and m.chat.id not in player.chats:
-                await player.join_chat(m.chat.id)
 
             if not player.exists:
                 try:
@@ -57,6 +57,9 @@ class AuthMiddlware(BaseMiddleware):
                 except:
                     pass
                 raise CancelHandler
+            if m.chat.type in ['group', 'supergroup'] and m.chat.id not in player.chats:
+                await player.join_chat(m.chat.id)
+
             if not player.alive:
                 try:
                     await m.answer('<a href="tg://user?id=%s">%s</a> мёртв.' %
