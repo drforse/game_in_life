@@ -385,8 +385,8 @@ class Player:
                             )
             child = Player(model=child)
             await child.born(mother, father, chat_id)
-            mother.satiety -= 60
-            father.satiety -= 30
+            mother.satiety -= 30
+            father.satiety -= 20
 
         yield {'content_type': 'text', 'content': end_message}
 
