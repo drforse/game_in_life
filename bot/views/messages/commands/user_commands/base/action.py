@@ -46,5 +46,3 @@ class BaseAction(UserCommandView):
         await m.answer('<a href="tg://user?id=%d">%s</a>, <a href="tg://user?id=%d">%s</a> предлагает %s'
                        % (second_player.tg_id, second_player.name, player.tg_id, player.name, action),
                        reply_markup=kb)
-
-

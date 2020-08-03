@@ -60,10 +60,15 @@ class Game:
             females = []
             males = []
             for user in UserModel.objects(chats=chat, age__gte=12, age__lte=100):
-                member = await bot.get_chat_member(chat, user.tg_id)
+                try:
+                    member = await bot.get_chat_member(chat, user.tg_id)
+                except:
+                    user.update(pull__chats=chat)
+                    continue
                 if member.status in ['left', 'kicked']:
                     user.update(pull__chats=chat)
                     continue
+
                 if user.gender == 'female' and user not in females_in_marriage:
                     females.append(user)
                 elif user.gender == 'male' and user not in males_in_marriage:
