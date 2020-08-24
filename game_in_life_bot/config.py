@@ -3,7 +3,7 @@ from aiogram.dispatcher import Dispatcher
 from aiogram import Bot
 import os
 
-API_TOKEN = os.environ['bot_token']
+API_TOKEN = os.environ['game_in_life_bot_token']
 DB_URL = os.environ['game_in_life_db_url']
 SENDERMAN_SECURE_API_BOT_TOKEN = os.environ['senderman_secure_api_bot_token']
 
