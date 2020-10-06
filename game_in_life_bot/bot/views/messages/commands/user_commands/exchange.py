@@ -44,19 +44,19 @@ class Exchange(UserCommandView):
         try:
             await exchange.convert(from_cur, to_cur, float(split[2]))
             logging.info(f'balance after converting: {player.balance}')
-            await m.answer('Операция успешна произведена.')
+            await m.answer('Операция успешно произведена.')
         except NotEnoughMoneyOnBalance:
             await m.answer('Недостаточно денег на балансе.')
         except CurrencyDoesNotExist as e:
             logging.error(f'currency {e.txt} doesn\'t exist, this exceptions should never be raised, strange!')
             await m.answer(f'Мы не производим операций с {e.txt}, извините')
-        except senderman_roullette_api.exceptions.UserNotFound:
+        except exceptions.UserNotFound:
             await m.answer('У Вас нет счета в юлькоинах, чтобы его открыть, зайдите в @miniroulette_bot')
-        except senderman_roullette_api.exceptions.BadRequest as e:
+        except exceptions.BadRequest as e:
             logging.error(e.txt or e)
             await m.answer('Обмен валют из/в юлюкоины временно недоступен. '
                            'Если недоступность длится слишком долго, feel free to contact @dr_fxrse')
-        except senderman_roullette_api.exceptions.NotEnoughCoinsRemaining:
+        except exceptions.NotEnoughCoinsRemaining:
             await m.answer('На балансе должно оставаться хотя бы 400 юлькоинов!')
 
     @staticmethod
