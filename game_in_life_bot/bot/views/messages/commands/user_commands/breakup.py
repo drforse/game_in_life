@@ -6,7 +6,7 @@ from ......game.types.player import Player
 
 class Breakup(UserCommandView):
     needs_reply_auth = False
-    needs_satiety_level = 15
+    needs_satiety_level = 10
 
     @staticmethod
     async def execute(m: Message):

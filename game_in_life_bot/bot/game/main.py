@@ -1,3 +1,5 @@
+import traceback
+
 from aiogram.types import Message, ReplyKeyboardRemove
 from aiogram import Bot, Dispatcher
 import logging
@@ -7,7 +9,7 @@ import random
 from ...models import *
 from ...game.types.player import Player
 from ...config import SEX_DELAY_INTERVAL
-from ..aiogram_fsm import CreatePlayerForm, FuckForm
+from ..aiogram_fsm import CreatePlayerForm, ActionForm
 from .exceptions import *
 
 
@@ -102,41 +104,19 @@ class Game:
                                       chat_tg_id: int, user: Player, second_user: Player, custom_data):
         for u in [user, second_user]:
             current_state = dp.current_state(chat=chat_tg_id, user=u.tg_id)
-            await current_state.set_state(FuckForm.fucking)
-            if second_user == user:
-                break
-        me = f'<a href="tg://user?id={user.tg_id}">{user.name}</a>'
-        reply = f'<a href="tg://user?id={second_user.tg_id}">{second_user.name}</a>'
-        output = await user.action(action, chat_tg_id, second_user,
-                                   delay=random.randint(SEX_DELAY_INTERVAL[0],
-                                                        SEX_DELAY_INTERVAL[1]),
-                                   custom_data=custom_data.get('messages_and_delays'),
-                                   me=me, reply=reply)
-        async for out in output:
-            if out['content_type'] == 'animation':
-                try:
-                    await bot.send_animation(chat_tg_id, out['content'])
-                except Exception as e:
-                    logging.error(f"gif ({out.get('content')}) not sent: {e}")
-                    pass
-            elif out['content_type'] == 'text':
-                try:
-                    await bot.send_message(chat_tg_id, out['content'])
-                except Exception as e:
-                    logging.error(f"text ({out.get('content')}) not sent: {e}")
-                    pass
-            elif out['content_type'] == 'error' and out['content'] == 'NoCustomMessagesGiven':
-                try:
-                    await bot.send_message(chat_tg_id,
-                                           'Кастомные сообщения не были даны или предложение устарело')
-                except:
-                    pass
-            else:
-                raise ContentTypeUnexpected(out['content_type'])
-        for u in [user, second_user]:
-            await dp.current_state(chat=chat_tg_id, user=u.tg_id).finish()
-            if second_user == user:
-                break
+            await current_state.set_state(ActionForm.busy)
+        try:
+            action = await user.action(action, chat_tg_id, second_user,
+                                       delay=random.randint(SEX_DELAY_INTERVAL[0],
+                                                            SEX_DELAY_INTERVAL[1]),
+                                       custom_data=custom_data.get('messages_and_delays'))
+            await action.do(bot=bot)
+        except:
+            logging.error(traceback.format_exc())
+            await bot.send_message(chat_tg_id, "Sorry, some error occured")
+        finally:
+            for u in [user, second_user]:
+                await dp.current_state(chat=chat_tg_id, user=u.tg_id).finish()
 
     @classmethod
     async def process_declined_action(cls, action: str, callback_query,

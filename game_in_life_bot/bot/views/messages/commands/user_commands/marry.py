@@ -5,7 +5,7 @@ from ......game.types.player import *
 
 
 class Marry(UserCommandView):
-    needs_satiety_level = 35
+    needs_satiety_level = 10
 
     @staticmethod
     async def execute(m: Message):

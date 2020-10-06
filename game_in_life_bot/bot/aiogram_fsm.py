@@ -11,6 +11,5 @@ class CreatePlayerForm(StatesGroup):
     set_pic = State()
 
 
-class FuckForm(StatesGroup):
-    fucking = State()
-    masturbate = State()
+class ActionForm(StatesGroup):
+    busy = State()

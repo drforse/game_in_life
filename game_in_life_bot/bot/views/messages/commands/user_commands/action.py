@@ -7,6 +7,7 @@ from .base.action import BaseAction
 
 
 class Action(UserCommandView):
+    needs_satiety_level = 5
 
     @classmethod
     async def execute(cls, m: Message):

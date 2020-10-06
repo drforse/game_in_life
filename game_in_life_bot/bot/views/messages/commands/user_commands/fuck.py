@@ -5,7 +5,7 @@ from .base.action import BaseAction
 
 
 class Fuck(UserCommandView):
-    needs_satiety_level = 65
+    needs_satiety_level = 15
 
     @classmethod
     async def execute(cls, m: Message):

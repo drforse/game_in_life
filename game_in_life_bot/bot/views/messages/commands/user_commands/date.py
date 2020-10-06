@@ -5,7 +5,7 @@ from ......game.types.player import *
 
 
 class Date(UserCommandView):
-    needs_satiety_level = 15
+    needs_satiety_level = 5
 
     @staticmethod
     async def execute(m: Message):

@@ -8,6 +8,7 @@ import asyncio
 from bson.objectid import ObjectId
 from mongoengine.queryset.visitor import Q
 
+from ..actions.actions_factory import ActionsFactory
 from ...models import *
 from .balance import Balance
 from .item import Item
@@ -101,56 +102,12 @@ class Player:
         self.model.update(pull__chats=chat_tg_id)
 
     async def action(self, action: str, chat_id: int, partner: typing.Union[UserModel, Player, int],
-                     delay: int = 300, custom_data: str = None, **kwargs) -> typing.AsyncGenerator:
+                     delay: int = 300, custom_data: str = None) -> 'Action':
         partner = await self.resolve_user(partner, 'Player')
-        if action == 'fuck':
-            return self.fuck(chat_id, partner, delay, custom_data, **kwargs)
-        if action == 'dating':
-            return self.date(chat_id, partner.tg_id)
-        if action == 'marriage':
-            return self.marry(chat_id, partner.tg_id)
-        if action == 'custom':
-            self.satiety -= 20
-            partner.satiety -= 20
-
-            self.model.satiety = self.satiety
-            partner.model.satiety = partner.satiety
-            self.model.save()
-            partner.model.save()
-            custom_data = await self.parse_data_for_custom_action(custom_data)
-            return self.custom_action(custom_data['messages'], custom_data['delays'], **kwargs)
-
-    @staticmethod
-    async def parse_data_for_custom_action(custom_data: str):
-        if not custom_data:
-            return {'messages': [], 'delays': {}}
-        dt = custom_data.split('|')
-        messages = [msg.strip() for msg in dt[0::2]]
-        delays = [int(delay) for delay in dt[1::2]]
-        delays_dict = {}
-        for num, delay in enumerate(delays):
-            if delay > 0:
-                delays_dict[num] = delay
-        return {'messages': messages, 'delays': delays_dict}
-
-    @staticmethod
-    async def custom_action(messages: typing.List[str],
-                            delays: dict = None,
-                            **kwargs) -> typing.AsyncGenerator:
-        """
-
-        :param messages:
-        :param delays: {message_index: delay_in_seconds}  # message_index == index of message after which make delay
-        :param kwargs: variables for messages to format messages using .format()
-        :return:
-        """
-        if not messages:
-            yield {'content_type': 'error', 'content': 'NoCustomMessagesGiven'}
-        for num, message in enumerate(messages):
-            msg = message.replace('{me}', kwargs.get('me')).replace('{reply}', kwargs.get('reply'))
-            yield {'content_type': 'text', 'content': msg}
-            if delays.get(num):
-                await asyncio.sleep(delays[num])
+        Action_ = ActionsFactory.get(action)
+        action_ = Action_(5, self, partner, chat_id)
+        await action_.complete(delay, custom_data)
+        return action_
 
     async def born(self, mother: Player, father: Player, chat: typing.Union[Country, int]):
         if isinstance(chat, Country):
@@ -234,48 +191,6 @@ class Player:
             output[parent_player.tg_id] = 'Ваше чадо, %s - умерло...' % self.name
         return output
 
-    async def marry(self, chat_tg_id: int, partner_tg_id: int):
-        partner = Player(tg_id=partner_tg_id)
-
-        can_marry = await self.can_marry(chat_tg_id, partner)
-        if not can_marry['result']:
-            yield {'content_type': 'text', 'content': self.cant_marry_reason_exaplanation[can_marry['reason']]}
-
-        self.model.set_partner(chat_tg_id, partner.id)
-        partner.model.set_partner(chat_tg_id, self.id)
-        self.model.unset_lover(chat_tg_id)
-        partner.model.unset_lover(chat_tg_id)
-        text = ('Поздавляем <a href="tg://user?id=%d">%s</a> и <a href="tg://user?id=%d">%s</a> со свадьбой' %
-                (self.tg_id, self.name, partner.tg_id, partner.name))
-        yield {'content_type': 'text', 'content': text}
-        self.satiety -= 25
-        partner.satiety -= 25
-
-        self.model.satiety = self.satiety
-        partner.model.satiety = partner.satiety
-        self.model.save()
-        partner.model.save()
-
-    async def date(self, chat_tg_id: int, lover_tg_id: int):
-        lover = Player(tg_id=lover_tg_id)
-
-        can_date = await self.can_date(chat_tg_id, lover)
-        if not can_date['result']:
-            yield {'content_type': 'text', 'content': self.cant_date_reason_exaplanation[can_date['reason']]}
-
-        self.model.set_lover(chat_tg_id, lover.id)
-        lover.model.set_lover(chat_tg_id, self.id)
-        text = ('<a href="tg://user?id=%d">%s</a> и <a href="tg://user?id=%d">%s</a> теперь встречаются' %
-                (self.tg_id, self.name, lover.tg_id, lover.name))
-        yield {'content_type': 'text', 'content': text}
-        self.satiety -= 10
-        lover.satiety -= 10
-
-        self.model.satiety = self.satiety
-        lover.model.satiety = lover.satiety
-        self.model.save()
-        lover.model.save()
-
     async def can_marry(self, chat_tg_id: int, partner: Player) -> typing.Dict:
         """
 
@@ -337,69 +252,6 @@ class Player:
             lover_model = UserModel(id=self.model.lovers[str(chat_tg_id)])
         self.model.unset_lover(chat_tg_id)
         lover_model.unset_lover(chat_tg_id)
-
-    async def fuck(self, chat_id, partner: Player, delay: int = 300, custom_data: str = None, **kwargs):
-        custom_messages = []
-        custom_delays = {}
-        if custom_data:
-            custom_data = await self.parse_data_for_custom_action(custom_data)
-            custom_messages = custom_data['messages']
-            custom_delays = custom_data['delays']
-            start_message = custom_messages[0].replace('{me}', kwargs.get('me')).replace('{reply}', kwargs.get('reply'))
-            end_message = custom_messages[-1].replace('{me}', kwargs.get('me')).replace('{reply}', kwargs.get('reply'))
-            delay = custom_delays.get(0)
-        elif self.id == partner.id:
-            verb_form = 'кончил' if self.gender == 'male' else 'кончила' if self.gender == 'female' else 'кончил(а)'
-            start_message = '<a href="tg://user?id=%d">%s</a> дрочит.' % (self.tg_id, self.name)
-            end_message = '<a href="tg://user?id=%d">%s</a> %s.' % (self.tg_id, self.name, verb_form)
-        else:
-            start_message = '<a href="tg://user?id=%d">%s</a> и <a href="tg://user?id=%d">%s</a> пошли трахаться :3' %\
-                            (self.tg_id, self.name, partner.tg_id, partner.name)
-            end_message = '<a href="tg://user?id=%d">%s</a> и <a href="tg://user?id=%d">%s</a> закончили трахаться' % \
-                          (self.tg_id, self.name, partner.tg_id, partner.name)
-        yield {'content_type': 'text', 'content': start_message}
-
-        sex_types = await self.get_sex_types(partner)
-        sex_type = sex_types['main']
-        universal_sex_type = sex_types['universal']
-        possible_gifs = await self.get_possible_sex_gifs(sex_type, universal_sex_type)
-
-        if possible_gifs:
-            yield {'content_type': 'animation', 'content': random.choice(possible_gifs)}
-        if delay:
-            await asyncio.sleep(delay)
-        for num, message in enumerate(custom_messages[1:-1]):
-            msg = message.replace('{me}', kwargs.get('me')).replace('{reply}', kwargs.get('reply'))
-            yield {'content_type': 'text', 'content': msg}
-            if custom_delays.get(num+1):
-                await asyncio.sleep(custom_delays[num+1])
-
-        child = await self.get_child_and_parents(chat_id, partner)
-        if child['child']:
-            mother = child['mother']
-            father = child['father']
-            child = child['child']
-            end_message += ('\n\n<a href="tg://user?id=%d">%s</a> забеременела и родила '
-                            '<a href="tg://user?id=%d">%s</a>' % (mother.tg_id, mother.name, child.tg_id,
-                                                                  child.name)
-                            )
-            child = Player(model=child)
-            await child.born(mother, father, chat_id)
-            mother.satiety -= 30
-            father.satiety -= 20
-
-        yield {'content_type': 'text', 'content': end_message}
-
-        possible_gifs = await self.get_possible_cum_sex_gifs(sex_type, universal_sex_type)
-        if possible_gifs:
-            yield {'content_type': 'animation', 'content': random.choice(possible_gifs)}
-        self.satiety -= 20
-        partner.satiety -= 20
-
-        self.model.satiety = self.satiety
-        partner.model.satiety = partner.satiety
-        self.model.save()
-        partner.model.save()
 
     async def get_child_and_parents(self, chat_id: int,
                                     partner: Player) -> typing.Dict[str, typing.Union[UserModel, Player]]:

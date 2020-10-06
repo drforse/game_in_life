@@ -29,6 +29,7 @@ TELEGRAM_BOT_TOKEN: str = API_TOKEN
 
 MIDDLEWARES: typing.List[BaseMiddleware.__class__] = [AuthMiddlware]
 
-MEMORY_STORAGE = MemoryStorage()
+BOT_STORAGE = MemoryStorage()
+MEMORY_STORAGE = BOT_STORAGE  # needed for backward compatibility, will be removed
 
 PARSE_MODE = types.ParseMode.HTML

@@ -6,7 +6,7 @@ from ......game.types.player import Player
 
 class Divorce(UserCommandView):
     needs_reply_auth = False
-    needs_satiety_level = 35
+    needs_satiety_level = 12
 
     @staticmethod
     async def execute(m: Message):
