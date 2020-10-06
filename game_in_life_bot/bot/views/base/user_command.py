@@ -12,6 +12,8 @@ class UserCommandView(CommandView, UserBaseView):
     needs_reply_auth = True
     needs_satiety_level = 0
     ignore_busy = False
+    dead_allowed = False
+
     state = lambda: [ActionForm.busy, None]
 
     @classmethod
@@ -44,13 +46,13 @@ class UserCommandView(CommandView, UserBaseView):
             if m.chat.type in ['group', 'supergroup'] and m.chat.id not in player.chats:
                 await player.join_chat(m.chat.id)
 
-            if not player.alive:
+            if not player.alive and not cls.dead_allowed:
                 try:
                     await m.answer('%s мёртв.' % mention)
                 except:
                     pass
                 raise CancelHandler
-            if player.satiety and player.satiety < cls.needs_satiety_level:
+            if player.alive and player.satiety and player.satiety < cls.needs_satiety_level:
                 await m.answer(
                     '%s слишком голоден! Нужный уровень сытости - %s, уровень сытости - %s.' % (
                         mention, cls.needs_satiety_level, round(player.satiety)))

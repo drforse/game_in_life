@@ -1,4 +1,5 @@
 import random
+from pathlib import Path
 
 from .action import Action
 
@@ -6,6 +7,15 @@ from .action import Action
 class FuckAction(Action):
 
     async def complete(self, delay: int = 300, custom_data: str = None, **kwargs):
+        if not self.second_participant.alive:
+            file_path = Path(__file__).parent / Path(f'texts/fuck/dead/{self.initiator.gender}_with/{self.second_participant.gender}/0.txt')
+            if not file_path.exists():
+                file_path = Path(__file__).parent / Path(f'texts/fuck/dead/universal/0.txt')
+            else:
+                delay = 0
+            with open(file_path, encoding='utf-8') as f:
+                custom_data = f.read()
+
         custom_actions = []
         if custom_data:
             custom_actions = self.parse_from_string(custom_data)

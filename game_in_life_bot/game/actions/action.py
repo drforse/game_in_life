@@ -138,6 +138,8 @@ class Action:
         for action in self.actions:
             await action.do(*args, **kwargs)
         for participant in [self.initiator, self.second_participant]:
+            if not participant.alive:
+                continue
             participant.satiety -= self.used_satiety
             participant.model.satiety = participant.satiety
             participant.model.save()

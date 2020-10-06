@@ -46,7 +46,7 @@ class BaseAction(UserBaseView):
 
         dp = Dispatcher.get_current()
 
-        if user.id == second_user.id:
+        if user.id == second_user.id or not second_player.alive:
             await Game.process_accepted_action(action, dp, m.chat.id, player, second_player)
             return
 

@@ -293,6 +293,10 @@ class Player:
 
         universal_sex_type = 'universal' if not sex_type.startswith('masturbate') else 'masturbate_universal'
 
+        if not partner.alive:
+            sex_type = "dead_" + sex_type
+            universal_sex_type = "dead_" + universal_sex_type
+
         return {'main': sex_type, 'universal': universal_sex_type}
 
     @staticmethod
