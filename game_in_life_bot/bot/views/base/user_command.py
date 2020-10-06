@@ -12,7 +12,6 @@ class UserCommandView(CommandView, UserBaseView):
 
     @classmethod
     async def pre_execute(cls, m: Message):
-        print(m)
         if cls.needs_reply_auth and not m.reply_to_message:
             try:
                 await m.answer('Команда должна быть реплаем')
