@@ -258,7 +258,7 @@ class Player:
         child = None
         female = self if self.gender == 'female' else partner if partner.gender == 'female' else None
         male = self if self.gender == 'male' else partner if partner.gender == 'male' else None
-        if male and female and female.age >= 12:
+        if male and female and female.age >= 12 and male.alive and female.alive:
 
             country = Country(chat_id)
             childs_queue = await country.get_childs_queue()
