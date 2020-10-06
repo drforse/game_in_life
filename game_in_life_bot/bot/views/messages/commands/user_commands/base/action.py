@@ -1,17 +1,20 @@
+import random
+
+from aiogram import Dispatcher
 from aiogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
-import re
+from aiogram_oop_framework.views import UserBaseView
 
-from .......bot.views.base import UserCommandView
-from .......bot.views.callbacks.accept_action import AcceptAction
 from .......game.types.player import Player
+from ......game import Game
 from ....... import config
+from .......game.actions.actions_factory import ActionsFactory
 
 
-class BaseAction(UserCommandView):
+class BaseAction(UserBaseView):
     custom_action_pattern = r'/action(@[^ \|]+)? [^\|]+(\|[^\|]+\| *([1-9][0-9]*|0) *)+ *\|[^\|]+$'
 
     @classmethod
-    async def execute(cls, m: Message):
+    async def execute_action(cls, m: Message):
         try:
             await m.delete()
         except:
@@ -21,28 +24,43 @@ class BaseAction(UserCommandView):
             await m.answer('Идите нахуй со своим 1xbet, забаню щас блять')
             return
 
-        action = m.text.split('|')[0].split(maxsplit=1)[1].strip()
+        action_split = m.text.split('|', maxsplit=1)
+        description = action_split[0].split(maxsplit=1)[1].strip()
         action_type = 'custom'
-        if 'type:' in action:
-            action_type = action.split('type:')[1].split()[0]
-            action = action.replace(f'type:{action_type} ', '')
-        if re.match(cls.custom_action_pattern, m.text):
-            async with config.dp.current_state(chat=m.chat.id, user=m.from_user.id).proxy() as dt:
-                dt['action'] = action
-                dt['messages_and_delays'] = m.text.split('|', maxsplit=1)[1].strip()
+        if 'type:' in description:
+            action_type = description.split('type:')[1].split()[0]
+            description = description.replace(f'type:{action_type} ', '')
 
-        player = Player(tg_id=m.from_user.id)
-        if m.from_user.id != m.reply_to_message.from_user.id:
-            second_player = Player(tg_id=m.reply_to_message.from_user.id)
-        else:
-            await AcceptAction.execute(data=f'action {action_type} accept {player.tg_id} {player.tg_id}', message=m)
+        user = m.from_user
+        second_user = m.reply_to_message.from_user
+
+        player = Player(tg_id=user.id)
+        second_player = Player(tg_id=second_user.id)
+
+        Action = ActionsFactory.get(action_type)
+        action = Action(5, player, second_player, m.chat.id)
+        delay = random.randint(config.SEX_DELAY_INTERVAL[0], config.SEX_DELAY_INTERVAL[1])
+        custom_data = action_split[1].strip() if len(action_split) > 1 else ""
+        await action.complete(delay, custom_data)
+
+        dp = Dispatcher.get_current()
+
+        if user.id == second_user.id:
+            await Game.process_accepted_action(action, dp, m.chat.id, player, second_player)
             return
 
+        async with dp.current_state(chat=m.chat.id, user=m.from_user.id).proxy() as dt:
+            dt['action'] = action
+
         kb = InlineKeyboardMarkup()
-        accept = InlineKeyboardButton('Го', callback_data=f'action {action_type} accept {player.tg_id} {second_player.tg_id}')
-        decline = InlineKeyboardButton('Нее', callback_data=f'action {action_type} decline {player.tg_id} {second_player.tg_id}')
+        accept = InlineKeyboardButton(
+            'Го', callback_data=f'action {action_type} accept {player.tg_id} {second_player.tg_id}')
+        decline = InlineKeyboardButton(
+            'Нее', callback_data=f'action {action_type} decline {player.tg_id} {second_player.tg_id}')
         kb.add(accept, decline)
 
-        await m.answer('<a href="tg://user?id=%d">%s</a>, <a href="tg://user?id=%d">%s</a> предлагает %s'
-                       % (second_player.tg_id, second_player.name, player.tg_id, player.name, action),
-                       reply_markup=kb)
+        await m.answer(
+            '%s, %s предлагает %s' % (
+                second_user.get_mention(
+                    second_player.name), user.get_mention(player.name), description),
+            reply_markup=kb)

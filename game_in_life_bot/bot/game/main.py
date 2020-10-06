@@ -100,23 +100,19 @@ class Game:
                 pass
 
     @classmethod
-    async def process_accepted_action(cls, action: str, dp: Dispatcher, bot: Bot,
-                                      chat_tg_id: int, user: Player, second_user: Player, custom_data):
-        for u in [user, second_user]:
-            current_state = dp.current_state(chat=chat_tg_id, user=u.tg_id)
+    async def process_accepted_action(cls, action: 'Action', dp: Dispatcher,
+                                      chat_tg_id: int, user: Player, second_user: Player):
+        for u in {user.tg_id, second_user.tg_id}:
+            current_state = dp.current_state(chat=chat_tg_id, user=u)
             await current_state.set_state(ActionForm.busy)
         try:
-            action = await user.action(action, chat_tg_id, second_user,
-                                       delay=random.randint(SEX_DELAY_INTERVAL[0],
-                                                            SEX_DELAY_INTERVAL[1]),
-                                       custom_data=custom_data.get('messages_and_delays'))
-            await action.do(bot=bot)
+            await action.do(bot=dp.bot)
         except:
             logging.error(traceback.format_exc())
-            await bot.send_message(chat_tg_id, "Sorry, some error occured")
+            await dp.bot.send_message(chat_tg_id, "Sorry, some error occured")
         finally:
-            for u in [user, second_user]:
-                await dp.current_state(chat=chat_tg_id, user=u.tg_id).finish()
+            for u in {user.tg_id, second_user.tg_id}:
+                await dp.current_state(chat=chat_tg_id, user=u).finish()
 
     @classmethod
     async def process_declined_action(cls, action: str, callback_query,

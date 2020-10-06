@@ -1,7 +1,9 @@
+from aiogram import Dispatcher
 from aiogram.types import Message
 from aiogram.dispatcher.handler import CancelHandler
 from aiogram_oop_framework.views import CommandView, UserBaseView
 
+from ...aiogram_fsm import ActionForm
 from ....game.types import Player
 
 
@@ -9,6 +11,8 @@ class UserCommandView(CommandView, UserBaseView):
     needs_auth = True
     needs_reply_auth = True
     needs_satiety_level = 0
+    ignore_busy = False
+    state = lambda: [ActionForm.busy, None]
 
     @classmethod
     async def pre_execute(cls, m: Message):
@@ -24,10 +28,11 @@ class UserCommandView(CommandView, UserBaseView):
         if cls.needs_reply_auth and m.reply_to_message:
             users_to_auth.append(m.reply_to_message.from_user)
 
+        dp = Dispatcher.get_current()
         for user in users_to_auth:
             player = Player(tg_id=user.id)
             mention_url = f"https://t.me/{user.username}" if user.username else user.url
-            mention = f'<a href="{mention_url}">{user.full_name}</a>'
+            mention = f'<a href="{mention_url}">{player.name}</a>'
 
             if not player.exists:
                 try:
@@ -49,4 +54,9 @@ class UserCommandView(CommandView, UserBaseView):
                 await m.answer(
                     '%s слишком голоден! Нужный уровень сытости - %s, уровень сытости - %s.' % (
                         mention, cls.needs_satiety_level, round(player.satiety)))
+                raise CancelHandler
+
+            state = await dp.current_state(chat=m.chat.id, user=user.id).get_state()
+            if state == ActionForm.busy.state and not cls.ignore_busy:
+                await m.answer("%s занят." % mention, disable_web_page_preview=True)
                 raise CancelHandler

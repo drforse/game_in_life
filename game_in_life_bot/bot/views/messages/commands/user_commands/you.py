@@ -7,6 +7,7 @@ from .me import Me
 class You(UserCommandView):
     state = lambda: '*'
     needs_auth = False
+    ignore_busy = True
 
     @classmethod
     async def execute(cls, m: Message, state=None):
