@@ -53,7 +53,7 @@ class Me(UserCommandView):
                 s = 'Муж: %s'
             else:
                 s = 'Партнер: %s'
-            text += s % partner.name
+            text += s % partner.name + '\n'
 
         if lover:
             if lover.gender == 'female':
@@ -62,10 +62,10 @@ class Me(UserCommandView):
                 s = 'Парень: %s'
             else:
                 s = 'Встречается с: %s'
-            text += s % lover.name
+            text += s % lover.name + '\n'
 
         if childs:
-            text += '\nДети:\n'
+            text += 'Дети:\n'
         for child in childs:
             if not child.exists:
                 continue

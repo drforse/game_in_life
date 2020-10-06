@@ -12,6 +12,7 @@ from .......game.actions.actions_factory import ActionsFactory
 
 class BaseAction(UserBaseView):
     custom_action_pattern = r'/action(@[^ \|]+)? [^\|]+(\|[^\|]+\| *([1-9][0-9]*|0) *)+ *\|[^\|]+$'
+    needs_satiety_level = 5
 
     @classmethod
     async def execute_action(cls, m: Message):
@@ -38,10 +39,10 @@ class BaseAction(UserBaseView):
         second_player = Player(tg_id=second_user.id)
 
         Action = ActionsFactory.get(action_type)
-        action = Action(5, player, second_player, m.chat.id)
+        action = Action(cls.needs_satiety_level, player, second_player, m.chat.id)
         delay = random.randint(config.SEX_DELAY_INTERVAL[0], config.SEX_DELAY_INTERVAL[1])
         custom_data = action_split[1].strip() if len(action_split) > 1 else ""
-        await action.complete(delay, custom_data)
+        await action.complete(custom_data=custom_data, delay=delay)
 
         dp = Dispatcher.get_current()
 

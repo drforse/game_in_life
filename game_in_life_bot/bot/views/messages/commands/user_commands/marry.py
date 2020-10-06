@@ -1,14 +1,15 @@
 from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 
+from .base.action import BaseAction
 from ......bot.views.base import UserCommandView
 from ......game.types.player import *
 
 
-class Marry(UserCommandView):
+class Marry(UserCommandView, BaseAction):
     needs_satiety_level = 10
 
-    @staticmethod
-    async def execute(m: Message):
+    @classmethod
+    async def execute(cls, m: Message):
         player = Player(tg_id=m.from_user.id)
         partner_player = Player(tg_id=m.reply_to_message.from_user.id)
 
@@ -18,17 +19,7 @@ class Marry(UserCommandView):
             await m.answer(player.cant_marry_reason_exaplanation[can_marry['reason']])
             return
 
-        try:
-            await m.delete()
-        except:
-            pass
-
-        kb = InlineKeyboardMarkup()
-        accept = InlineKeyboardButton('Принять', callback_data=f'action marriage accept {player.tg_id} {partner_player.tg_id}')
-        decline = InlineKeyboardButton('Отклонить',
-                                       callback_data=f'action marriage decline {player.tg_id} {partner_player.tg_id}')
-        kb.add(accept, decline)
-
-        await m.answer('<a href="tg://user?id=%d">%s</a>, <a href="tg://user?id=%d">%s</a> предлагает тебе свои руку '
-                       'и сердце' % (partner_player.tg_id, partner_player.name, player.tg_id, player.name),
-                       reply_markup=kb)
+        args = m.get_args()
+        m.text = '/action' + ' type:marriage '
+        m.text += args or 'тебе свои руку и сердце |'
+        await cls.execute_action(m)

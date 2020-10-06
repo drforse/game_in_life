@@ -23,9 +23,8 @@ class AcceptAction(CallbackQueryView):
         second_player = Player(tg_id=second_user) if user != second_user else player
 
         dp = Dispatcher.get_current()
-        for user in {user, second_user}:
-            player = Player(tg_id=user)
-            state = await dp.current_state(chat=c.message.chat.id, user=user).get_state()
+        for u in {user, second_user}:
+            state = await dp.current_state(chat=c.message.chat.id, user=u).get_state()
             if state == ActionForm.busy.state:
                 await c.answer("%s занят." % player.name, show_alert=True)
                 return
@@ -34,6 +33,7 @@ class AcceptAction(CallbackQueryView):
         if not action:
             Action = ActionsFactory.get(action_type)
             action = Action(5, player, second_player, c.message.chat.id)
+            await action.complete()
 
         try:
             await c.message.delete()

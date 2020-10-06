@@ -13,4 +13,4 @@ class MarryAction(Action):
         self.second_participant.model.unset_lover(self.chat_id)
         self.initiator.model.set_partner(self.chat_id, self.second_participant.id)
         self.second_participant.model.set_partner(self.chat_id, self.initiator.id)
-        self.add_text_message('{me} и {reply}', 0)
+        self.add_text_message('{me} и {reply} заключили брак 💍', 0)

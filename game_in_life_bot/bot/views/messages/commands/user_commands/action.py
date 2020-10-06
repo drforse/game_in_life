@@ -6,7 +6,7 @@ from ......bot.views.base import UserCommandView
 from .base.action import BaseAction
 
 
-class Action(UserCommandView):
+class Action(UserCommandView, BaseAction):
     needs_satiety_level = 5
 
     @classmethod
@@ -19,4 +19,4 @@ class Action(UserCommandView):
                            'action_types: fuck')
             return
 
-        await BaseAction.execute(m)
+        await cls.execute_action(m)
