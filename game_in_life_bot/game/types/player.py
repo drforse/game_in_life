@@ -265,11 +265,11 @@ class Player:
                 child = random.choice(childs_queue)
                 children.append(child)
                 childs_queue.remove(child)
-            if childs_queue and random.randint(0, 10) // 10 == 1:
+            if childs_queue:
                 child_1 = random.choice(childs_queue)
                 children.append(child_1)
                 childs_queue.remove(child_1)
-            if childs_queue and random.randint(0, 10) // 10 == 1:
+            if childs_queue:
                 child_2 = random.choice(childs_queue)
                 children.append(child_2)
                 childs_queue.remove(child_2)

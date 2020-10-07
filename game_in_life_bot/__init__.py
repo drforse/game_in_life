@@ -6,6 +6,7 @@ import logging
 from .bot.manage import initialize_project
 from .config import dp, DB_URL
 from .users_queue import Queue
+from .game.actions.storage import ActionsStorage
 
 
 def run_users_queue():
@@ -22,6 +23,7 @@ def main():
     connect(host=DB_URL)
     multiprocessing.Process(target=run_users_queue).start()
     initialize_project(dp, dp.bot)
+    dp.actions_storage = ActionsStorage()
     executor.start_polling(dp, skip_updates=True)
 
 

@@ -50,8 +50,8 @@ class BaseAction(UserBaseView):
             await Game.process_accepted_action(action, dp, m.chat.id, player, second_player)
             return
 
-        async with dp.current_state(chat=m.chat.id, user=m.from_user.id).proxy() as dt:
-            dt['action'] = action
+        dt = dp.actions_storage
+        dt.update(m.chat.id, m.from_user.id,  {'action': action})
 
         kb = InlineKeyboardMarkup()
         accept = InlineKeyboardButton(

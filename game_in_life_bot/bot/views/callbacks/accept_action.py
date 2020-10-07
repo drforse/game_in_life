@@ -28,8 +28,8 @@ class AcceptAction(CallbackQueryView):
             if state == ActionForm.busy.state:
                 await c.answer("%s занят." % player.name, show_alert=True)
                 return
-        async with dp.current_state(chat=c.message.chat.id, user=user).proxy() as dt:
-            action = dt.get('action')
+        dt = dp.actions_storage
+        action = dt.get(c.message.chat.id, user, 'action')
         if not action:
             Action = ActionsFactory.get(action_type)
             action = Action(5, player, second_player, c.message.chat.id)
