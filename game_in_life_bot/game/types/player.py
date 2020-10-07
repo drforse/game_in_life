@@ -253,18 +253,28 @@ class Player:
         self.model.unset_lover(chat_tg_id)
         lover_model.unset_lover(chat_tg_id)
 
-    async def get_child_and_parents(self, chat_id: int,
-                                    partner: Player) -> typing.Dict[str, typing.Union[UserModel, Player]]:
-        child = None
+    async def get_childs_and_parents(self, chat_id: int,
+                                     partner: Player) -> typing.Dict[str, typing.Union[UserModel, Player, list]]:
+        children = []
         female = self if self.gender == 'female' else partner if partner.gender == 'female' else None
         male = self if self.gender == 'male' else partner if partner.gender == 'male' else None
         if male and female and female.age >= 12 and male.alive and female.alive:
-
             country = Country(chat_id)
             childs_queue = await country.get_childs_queue()
             if childs_queue:
                 child = random.choice(childs_queue)
-        return {'child': child, 'mother': female, 'father': male}
+                children.append(child)
+                childs_queue.remove(child)
+            if childs_queue and random.randint(0, 10) // 10 == 1:
+                child_1 = random.choice(childs_queue)
+                children.append(child_1)
+                childs_queue.remove(child_1)
+            if childs_queue and random.randint(0, 10) // 10 == 1:
+                child_2 = random.choice(childs_queue)
+                children.append(child_2)
+                childs_queue.remove(child_2)
+
+        return {'children': children, 'mother': female, 'father': male}
 
     async def get_sex_types(self, partner: Player) -> dict:
         if self.id == partner.id:
@@ -372,8 +382,8 @@ class Country:
         self.exists = True
         return self
 
-    async def get_childs_queue(self) -> typing.Optional[typing.Iterable[UserModel]]:
-        return UserModel.objects(age=-1, chats=self.chat_tg_id)
+    async def get_childs_queue(self) -> typing.Optional[typing.List[UserModel]]:
+        return list(UserModel.objects(age=-1, chats=self.chat_tg_id))
 
 
 class Eva:

@@ -58,7 +58,7 @@ class UserCommandView(CommandView, UserBaseView):
                         mention, cls.needs_satiety_level, round(player.satiety)))
                 raise CancelHandler
 
-            state = await dp.current_state(chat=m.chat.id, user=user.id).get_state()
+            state = await dp.current_state(chat=user.id, user=user.id).get_state()
             if state == ActionForm.busy.state and not cls.ignore_busy:
                 await m.answer("%s занят." % mention, disable_web_page_preview=True)
                 raise CancelHandler

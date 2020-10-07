@@ -103,7 +103,7 @@ class Game:
     async def process_accepted_action(cls, action: 'Action', dp: Dispatcher,
                                       chat_tg_id: int, user: Player, second_user: Player):
         for u in {user.tg_id, second_user.tg_id}:
-            current_state = dp.current_state(chat=chat_tg_id, user=u)
+            current_state = dp.current_state(chat=u, user=u)
             await current_state.set_state(ActionForm.busy)
         try:
             await action.do(bot=dp.bot)
@@ -112,7 +112,7 @@ class Game:
             await dp.bot.send_message(chat_tg_id, "Sorry, some error occured")
         finally:
             for u in {user.tg_id, second_user.tg_id}:
-                await dp.current_state(chat=chat_tg_id, user=u).finish()
+                await dp.current_state(chat=u, user=u).finish()
 
     @classmethod
     async def process_declined_action(cls, action: str, callback_query,

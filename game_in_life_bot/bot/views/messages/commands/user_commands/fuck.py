@@ -6,7 +6,7 @@ from .base.action import BaseAction
 
 
 class Fuck(UserCommandView, BaseAction):
-    needs_satiety_level = 15
+    needs_satiety_level = 20
     dead_allowed = True
 
     @classmethod

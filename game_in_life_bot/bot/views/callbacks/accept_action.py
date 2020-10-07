@@ -24,7 +24,7 @@ class AcceptAction(CallbackQueryView):
 
         dp = Dispatcher.get_current()
         for u in {user, second_user}:
-            state = await dp.current_state(chat=c.message.chat.id, user=u).get_state()
+            state = await dp.current_state(chat=u, user=u).get_state()
             if state == ActionForm.busy.state:
                 await c.answer("%s занят." % player.name, show_alert=True)
                 return

@@ -40,18 +40,20 @@ class FuckAction(Action):
         if len(custom_actions) > 1:
             self.add_actions(custom_actions[1:-1])
 
-        child = await self.initiator.get_child_and_parents(self.chat_id, self.second_participant)
-        if child['child']:
-            mother = child['mother']
-            father = child['father']
-            child = child['child']
-            last_action.text += ('\n\n<a href="tg://user?id=%d">%s</a> забеременела и родила '
-                                 '<a href="tg://user?id=%d">%s</a>' % (mother.tg_id, mother.name, child.tg_id,
-                                                                       child.name))
+        children = await self.initiator.get_childs_and_parents(self.chat_id, self.second_participant)
+        if children['children']:
+            mother = children['mother']
+            father = children['father']
+            children = children['children']
+            last_action.text += '\n\n<a href="tg://user?id=%d">%s</a> забеременела и родила ' % (
+            mother.tg_id, mother.name)
+            append = ', '.join('<a href="tg://user?id=%d">%s</a>' % (child.tg_id, child.name) for child in children)
+            last_action.text += append
             from game_in_life_bot.game.types import Player
-            child = Player(model=child)
-            self.add_func_sub_action(child.born(mother, father, self.chat_id), 0)
-            self.used_satiety += 10
+            for child_model in children:
+                child = Player(model=child_model)
+                self.add_func_sub_action(child.born(mother, father, self.chat_id), 0)
+                self.used_satiety += 5
 
         self.add_actions(last_action)
 
