@@ -1,3 +1,4 @@
+import asyncio
 import traceback
 
 from aiogram.types import Message, ReplyKeyboardRemove
@@ -8,9 +9,8 @@ import random
 
 from ...models import *
 from ...game.types.player import Player
-from ...config import SEX_DELAY_INTERVAL
+from ...config import ACTIONS_FLOOD_REMOVE_DELAY
 from ..aiogram_fsm import CreatePlayerForm, ActionForm
-from .exceptions import *
 
 
 class Game:
@@ -106,7 +106,19 @@ class Game:
             current_state = dp.current_state(chat=u, user=u)
             await current_state.set_state(ActionForm.busy)
         try:
-            await action.do(bot=dp.bot)
+            results = await action.do(bot=dp.bot)
+            await asyncio.sleep(ACTIONS_FLOOD_REMOVE_DELAY)
+            removed_ids = []
+            for result in results:
+                if not hasattr(result, "sent_message"):
+                    continue
+                try:
+                    if result.sent_message.message_id not in removed_ids:
+                        await result.sent_message.delete()
+                        removed_ids.append(result.sent_message.message_id)
+                except:
+                    continue
+
         except:
             logging.error(traceback.format_exc())
             await dp.bot.send_message(chat_tg_id, "Sorry, some error occured")

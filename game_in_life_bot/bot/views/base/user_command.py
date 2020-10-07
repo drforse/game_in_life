@@ -52,7 +52,7 @@ class UserCommandView(CommandView, UserBaseView):
                 except:
                     pass
                 raise CancelHandler
-            if player.alive and player.satiety and player.satiety < cls.needs_satiety_level:
+            if player.alive and player.satiety is not None and player.satiety < cls.needs_satiety_level:
                 await m.answer(
                     '%s слишком голоден! Нужный уровень сытости - %s, уровень сытости - %s.' % (
                         mention, cls.needs_satiety_level, round(player.satiety)))

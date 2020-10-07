@@ -31,11 +31,20 @@ class TextSubAction(SubAction):
         kwargs = locals()
         del kwargs['self']
         super().__init__(**kwargs)
+        self.sent_message = None
 
-    async def do(self, bot: Bot):
-        text = self.text.replace('{me}', self.initiator.name).replace('{reply}', self.second_participant.name)
-        await bot.send_message(self.chat_id, text)
+    async def do(self, *args, bot: Bot, last_action=None, **kwargs):
+        text = ""
+        if isinstance(last_action, TextSubAction):
+            text = last_action.sent_message.text + "\n"
+        append = self.text.replace('{me}', self.initiator.name).replace('{reply}', self.second_participant.name)
+        text += append
+        if len(text + append) < 3000 and text != append:
+            self.sent_message = await last_action.sent_message.edit_text(text)
+        else:
+            self.sent_message = await bot.send_message(self.chat_id, append)
         await asyncio.sleep(self.delay)
+        return self
 
 
 class GifSubAction(SubAction):
@@ -50,10 +59,12 @@ class GifSubAction(SubAction):
         kwargs = locals()
         del kwargs['self']
         super().__init__(**kwargs)
+        self.sent_message = None
 
-    async def do(self, bot: Bot):
-        await bot.send_animation(self.chat_id, self.gif)
+    async def do(self, *args, bot: Bot, **kwargs):
+        self.sent_message = await bot.send_animation(self.chat_id, self.gif)
         await asyncio.sleep(self.delay)
+        return self
 
 
 class DelaySubAction(SubAction):
@@ -72,7 +83,7 @@ class FuncSubAction(SubAction):
         self.kwargs = kwargs
 
     async def do(self, *args, **kwargs):
-        await self.func
+        return await self.func
 
 
 class Action:
@@ -135,8 +146,15 @@ class Action:
             self.actions += [actions]
 
     async def do(self, *args, **kwargs):
-        for action in self.actions:
-            await action.do(*args, **kwargs)
+        results = []
+
+        result = await self.actions[0].do(*args, **kwargs)
+        results.append(result)
+        if len(self.actions) > 1:
+            for action in self.actions[1:]:
+                result = await action.do(*args, **kwargs, last_action=result)
+                results.append(result)
+
         for participant in [self.initiator, self.second_participant]:
             if not participant.alive:
                 continue
@@ -146,3 +164,4 @@ class Action:
             if self.initiator.id == self.second_participant.id:
                 break
         self.finished = True
+        return results

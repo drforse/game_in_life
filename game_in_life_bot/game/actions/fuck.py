@@ -19,14 +19,14 @@ class FuckAction(Action):
         custom_actions = []
         if custom_data:
             custom_actions = self.parse_from_string(custom_data)
-            self.add_actions(custom_actions[0:1])
+            first_action = custom_actions[0]
             last_action = custom_actions[-1]
         elif self.initiator.id == self.second_participant.id:
             verb_form = 'кончил' if self.initiator.gender == 'male' else 'кончила' if self.initiator.gender == 'female' else 'кончил(а)'
-            self.add_text_message('{me} дрочит.', 0)
+            first_action = self.get_text_sub_action('{me} дрочит.', 0)
             last_action = self.get_text_sub_action('{me} %s.' % verb_form, 0)
         else:
-            self.add_text_message('{me} и {reply} пошли трахаться :3', 0)
+            first_action = self.get_text_sub_action('{me} и {reply} пошли трахаться :3', 0)
             last_action = self.get_text_sub_action('{me} и {reply} закончили трахаться', 0)
 
         sex_types = await self.initiator.get_sex_types(self.second_participant)
@@ -35,8 +35,11 @@ class FuckAction(Action):
         possible_gifs = await self.initiator.get_possible_sex_gifs(sex_type, universal_sex_type)
 
         if possible_gifs:
-            self.add_gif_message(random.choice(possible_gifs), 0)
-        self.add_delay_sub_action(delay)
+            self.add_actions([first_action])
+            self.add_gif_message(random.choice(possible_gifs), delay)
+        else:
+            first_action.delay = delay
+            self.add_actions([first_action])
         if len(custom_actions) > 1:
             self.add_actions(custom_actions[1:-1])
 
