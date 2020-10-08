@@ -1,5 +1,5 @@
 aiogram==2.9.2
-aiogram-oop-framework==0.5.0
+aiogram-oop-framework==0.5.3
 aiohttp==3.6.2
 async-timeout==3.0.1
 attrs==19.3.0
