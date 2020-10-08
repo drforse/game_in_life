@@ -134,7 +134,7 @@ class Action:
         split = s.split('|')
         for text, delay in pairwise(split):
             actions.append(TextSubAction(
-                text, int(delay), self.chat_id, self.initiator, self.second_participant))
+                text.strip(), int(delay), self.chat_id, self.initiator, self.second_participant))
         actions.append(TextSubAction(
             split[-1], 0, self.chat_id, self.initiator, self.second_participant))
         return actions
