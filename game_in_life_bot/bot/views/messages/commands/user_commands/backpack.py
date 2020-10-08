@@ -8,7 +8,9 @@ from ......game.types import Player, Item
 
 
 class Backpack(UserCommandView):
+    """Это твой рюкзак, просто напиши /backpack и все поймешь :--)"""
     needs_reply_auth = False
+    command_description = "your backpack"
 
     @classmethod
     async def execute(cls, m: Message):

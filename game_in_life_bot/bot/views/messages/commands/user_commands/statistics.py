@@ -5,10 +5,12 @@ from ......bot.game.statistics import *
 
 
 class Statistics(UserCommandView):
+    """Посмотреть количество игроков и стран за все время"""
     state = lambda: '*'
     needs_auth = False
     needs_reply_auth = False
     ignore_busy = True
+    command_description = "see stats of the game for all time"
 
     @classmethod
     async def execute(cls, m: Message, state=None):

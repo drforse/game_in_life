@@ -6,7 +6,9 @@ from ......game.types.player import *
 
 
 class Date(UserCommandView, BaseAction):
+    """Предложить отношения 💖"""
     needs_satiety_level = 5
+    command_description = "offer dating"
 
     @classmethod
     async def execute(cls, m: Message):

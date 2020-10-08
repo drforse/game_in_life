@@ -5,8 +5,12 @@ from ......game.types.player import Player
 
 
 class Breakup(UserCommandView):
+    """Команда, чтобы расстаться со своей второй половинкой.
+Не забывай, что у тебя в каждом чате своя семья, так что команду нужно писать в нужном тебе чате, а не в любом)
+"""
     needs_reply_auth = False
     needs_satiety_level = 10
+    command_description = "breakup with your sweetheart"
 
     @staticmethod
     async def execute(m: Message):

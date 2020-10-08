@@ -6,10 +6,12 @@ from ......models import UserModel
 
 
 class Players(UserCommandView):
+    """Посмотреть список игроков в чате"""
     state = lambda: '*'
     needs_auth = False
     needs_reply_auth = False
     ignore_busy = True
+    command_description = "see all players in chat"
 
     @classmethod
     async def execute(cls, m: Message, state=None):

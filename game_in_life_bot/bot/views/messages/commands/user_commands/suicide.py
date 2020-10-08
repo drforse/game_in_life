@@ -6,9 +6,11 @@ from ......game.types.player import Player
 
 
 class Suicide(UserCommandView):
+    """Бля, ну че непонятного-то? Выйти в окно! Теперь дошло? Нет? Броситься под поезд, перерезать вены, повеситься, наорать на мамку, понял? Если до сих пор не понял, то даже хз, как тебе помочь, может тебе пойти в школу для "особо-одаренных"?"""
     needs_auth = False
     needs_reply_auth = False
     needs_satiety_level = 1
+    command_description = "suicide"
 
     @staticmethod
     async def execute(m: Message):

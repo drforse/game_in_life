@@ -6,7 +6,9 @@ from ......config import PAGE_OFFSET
 
 
 class Market(UserCommandView):
+    """Это магазин, просто напиши /market и все поймешь :--)"""
     needs_reply_auth = False
+    command_description = "let's shop"
 
     @classmethod
     async def execute(cls, m: Message):

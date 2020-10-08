@@ -6,8 +6,12 @@ from ......game.types.player import Player
 
 
 class Restart(UserCommandView):
+    """Начать жизнь заново.
+Можно использовать, чтобы родиться от Адама и Евы, если ты начал жизнь, когда еще было кому тебя рожать и сидишь, ждешь.
+А также если ты хочешь изменить свои начальные характеристики."""
     needs_auth = False
     needs_reply_auth = False
+    command_description = "restart your life"
 
     @classmethod
     async def execute(cls, m: Message):

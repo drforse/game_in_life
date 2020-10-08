@@ -8,9 +8,12 @@ from .me import Me
 
 
 class Start(UserCommandView):
+    """Начать жить <s>, а не существовать</s>"""
     needs_auth = False
     needs_reply_auth = False
     ignore_busy = True
+    command_description = "start your life"
+    index = 0
 
     @classmethod
     async def execute(cls, m: Message):

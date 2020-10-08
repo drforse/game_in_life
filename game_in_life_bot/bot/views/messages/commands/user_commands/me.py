@@ -6,9 +6,11 @@ from ......senderman_roullette_api import exceptions as sexcs
 
 
 class Me(UserCommandView):
+    """Просмотр своего профиля"""
     state = lambda: '*'
     needs_reply_auth = False
     ignore_busy = True
+    command_description = "see your profile"
 
     @classmethod
     async def execute(cls, m: Message, state=None):

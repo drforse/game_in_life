@@ -5,8 +5,11 @@ from ......game.types.player import Player
 
 
 class Divorce(UserCommandView):
+    """РАЗВОД
+Не забывай, что у тебя в каждом чате своя семья, так что команду нужно писать в нужном тебе чате, а не в любом)"""
     needs_reply_auth = False
     needs_satiety_level = 12
+    command_description = "divorce with your love"
 
     @staticmethod
     async def execute(m: Message):

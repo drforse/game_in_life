@@ -6,7 +6,9 @@ from ......game.types.player import *
 
 
 class Marry(UserCommandView, BaseAction):
+    """Предложить брак 💍"""
     needs_satiety_level = 10
+    command_description = "offer marriage"
 
     @classmethod
     async def execute(cls, m: Message):

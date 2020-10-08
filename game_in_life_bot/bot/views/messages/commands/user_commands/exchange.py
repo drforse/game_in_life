@@ -12,7 +12,11 @@ from ......senderman_roullette_api import exceptions
 
 
 class Exchange(UserCommandView):
+    """Данной командой ты можешь обменять деньги
+Шаблон: /exchange {from_currency} {to_currency} {value}
+Возможные значения валют: caffeine, caffeines, кофеин, кофеины, yulcoin, yulcoins, юлькоин, юлькоины"""
     needs_reply_auth = False
+    command_description = "{from_currency} {to_currency} {value}"
 
     @classmethod
     async def execute(cls, m: Message):
