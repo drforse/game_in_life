@@ -105,8 +105,17 @@ class Game:
         for u in {user.tg_id, second_user.tg_id}:
             current_state = dp.current_state(chat=u, user=u)
             await current_state.set_state(ActionForm.busy)
+
+        results = []
         try:
             results = await action.do(bot=dp.bot)
+        except:
+            logging.error(traceback.format_exc())
+            await dp.bot.send_message(chat_tg_id, "Sorry, some error occured")
+        finally:
+            for u in {user.tg_id, second_user.tg_id}:
+                await dp.current_state(chat=u, user=u).finish()
+
             await asyncio.sleep(ACTIONS_FLOOD_REMOVE_DELAY)
             removed_ids = []
             for result in results:
@@ -118,13 +127,6 @@ class Game:
                         removed_ids.append(result.sent_message.message_id)
                 except:
                     continue
-
-        except:
-            logging.error(traceback.format_exc())
-            await dp.bot.send_message(chat_tg_id, "Sorry, some error occured")
-        finally:
-            for u in {user.tg_id, second_user.tg_id}:
-                await dp.current_state(chat=u, user=u).finish()
 
     @classmethod
     async def process_declined_action(cls, action: str, callback_query,
