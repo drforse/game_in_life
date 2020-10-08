@@ -16,6 +16,7 @@ GAME_SPEED = 21600  # seconds == 1 age
 DEVELOPERS = [879343317]
 SEX_DELAY_INTERVAL = (10, 120)
 ACTIONS_FLOOD_REMOVE_DELAY = 120
+PAGE_OFFSET = 5
 
 CURRENCY_PRICES = {'pasyucoin': 0.5,
                    'main': 1.0,
