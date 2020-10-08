@@ -12,8 +12,10 @@ class Start(UserCommandView):
     needs_auth = False
     needs_reply_auth = False
     ignore_busy = True
+
     command_description = "start your life"
     index = 0
+    set_my_commands = 'first'
 
     @classmethod
     async def execute(cls, m: Message):

@@ -5,7 +5,7 @@ from .me import Me
 
 
 class You(UserCommandView):
-    """Просмотр профиля отправителья сообщения, на которое ты реплаишь"""
+    """Просмотр профиля отправителя сообщения, на которое ты реплаишь"""
     state = lambda: '*'
     needs_auth = False
     ignore_busy = True

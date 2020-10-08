@@ -11,7 +11,9 @@ class Help(UserCommandView):
     needs_auth = False
     needs_reply_auth = False
     ignore_busy = True
+
     command_description = "get help; /help &lt;command&gt;"
+    set_my_commands = 'first'
 
     @classmethod
     async def execute(cls, m: Message):

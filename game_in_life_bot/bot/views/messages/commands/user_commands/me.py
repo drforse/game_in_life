@@ -10,7 +10,9 @@ class Me(UserCommandView):
     state = lambda: '*'
     needs_reply_auth = False
     ignore_busy = True
+
     command_description = "see your profile"
+    set_my_commands = 'first'
 
     @classmethod
     async def execute(cls, m: Message, state=None):

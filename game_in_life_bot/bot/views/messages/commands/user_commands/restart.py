@@ -11,6 +11,7 @@ class Restart(UserCommandView):
 А также если ты хочешь изменить свои начальные характеристики."""
     needs_auth = False
     needs_reply_auth = False
+
     command_description = "restart your life"
 
     @classmethod

@@ -15,6 +15,7 @@ class UserCommandView(CommandView, UserBaseView):
     dead_allowed = False
 
     state = lambda: [ActionForm.busy, None]
+    set_my_commands = None
 
     @classmethod
     async def pre_execute(cls, m: Message):
