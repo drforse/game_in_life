@@ -14,7 +14,7 @@ class Market(UserCommandView):
         kb = InlineKeyboardMarkup(row_width=2)
         n = 0
         for item in items:
-            button = InlineKeyboardButton(f'{item.name}{item.emoji or ""}',
+            button = InlineKeyboardButton(f'{item.emoji or ""} {item.name} ${item.price}',
                                           callback_data=f'item observe market {item.id} {m.from_user.id}')
             kb.add(button)
             n += 1

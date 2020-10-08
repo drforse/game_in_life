@@ -10,13 +10,9 @@ class ChangeItemQuantity(CallbackQueryView):
 
     @classmethod
     async def execute(cls, c: CallbackQuery):
-        for l in c.message.reply_markup.inline_keyboard:
-            print([b.as_json() for b in l])
         change_type = c.data.split()[-2]
         quantity_b_data = c.message.reply_markup.inline_keyboard[0][1].callback_data
         current_quantity = int(quantity_b_data.split()[-2])
-        print(quantity_b_data)
-        print(current_quantity)
 
         if change_type == '-':
             new_quantity = current_quantity - 1

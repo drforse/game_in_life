@@ -19,15 +19,18 @@ class ObserveItem(CallbackQueryView):
         increase_quant_b = InlineKeyboardButton('+', callback_data=f'item quantity change + {c.from_user.id}')
         chosen_quant_b = InlineKeyboardButton('1', callback_data=f'item quantity chosen 1 {c.from_user.id}')
         kb.row(decrease_quant_b, chosen_quant_b, increase_quant_b)
+
+        close = InlineKeyboardButton('✖', callback_data=f"close_menu {c.from_user.id}")
+        bottom_row = [close]
         if data[2] == 'backpack':
             use_button = InlineKeyboardButton('Использовать',
                                               callback_data=f'item use {item_id} {c.from_user.id}')
-            kb.add(use_button)
+            bottom_row.append(use_button)
         elif data[2] == 'market':
             buy_button = InlineKeyboardButton('Купить',
                                               callback_data=f'item buy {item_id} {c.from_user.id}')
-            kb.add(buy_button)
-        print(kb.inline_keyboard)
+            bottom_row.append(buy_button)
+        kb.row(*bottom_row)
 
         item = Item(id=item_id)
         text = f'{item.name}{item.emoji or ""}\nЭффекты:\n'

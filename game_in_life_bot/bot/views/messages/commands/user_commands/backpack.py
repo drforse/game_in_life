@@ -21,7 +21,7 @@ class Backpack(UserCommandView):
                 continue
             item = Item(id=ObjectId(item_id))
             item.update_from_db()
-            button = InlineKeyboardButton(f'{item.name}{item.emoji or ""}: {item_quantity}',
+            button = InlineKeyboardButton(f'{item.emoji or ""} {item.name} {item_quantity}',
                                           callback_data=f'item observe backpack {item_id} {m.from_user.id}')
             kb.add(button)
             n += 1
