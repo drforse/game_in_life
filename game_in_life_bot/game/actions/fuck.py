@@ -48,15 +48,22 @@ class FuckAction(Action):
             mother = children['mother']
             father = children['father']
             children = children['children']
-            last_action.text += '\n\n<a href="tg://user?id=%d">%s</a> забеременела и родила ' % (
-            mother.tg_id, mother.name)
-            append = ', '.join('<a href="tg://user?id=%d">%s</a>' % (child.tg_id, child.name) for child in children)
-            last_action.text += append
-            from game_in_life_bot.game.types import Player
-            for child_model in children:
-                child = Player(model=child_model)
-                self.add_func_sub_action(child.born(mother, father, self.chat_id), 0)
-                self.used_satiety += 5
+
+            async def check_and_born(children_, lastsubaction, full_action):
+                from game_in_life_bot.game.types import Player
+                born_children = []
+                for child_model in children_:
+                    child = Player(model=child_model)
+                    if child.age == -1:
+                        await child.born(mother, father, self.chat_id)
+                        born_children.append(child)
+                        full_action.used_satiety += 5
+                lastsubaction.text += '\n\n<a href="tg://user?id=%d">%s</a> забеременела и родила ' % (
+                    mother.tg_id, mother.name)
+                append = ', '.join('<a href="tg://user?id=%d">%s</a>' % (child.tg_id, child.name)
+                                   for child in born_children)
+                last_action.text += append
+            self.add_func_sub_action(check_and_born(children, last_action, self), 0)
 
         self.add_actions(last_action)
 
