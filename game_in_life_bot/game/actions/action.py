@@ -1,5 +1,5 @@
 import asyncio
-from typing import Union, Callable, List, Awaitable
+from typing import Union, List, Awaitable
 
 from aiogram import Bot
 from aiogram.types.base import InputFile
