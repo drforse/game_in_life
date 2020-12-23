@@ -25,6 +25,7 @@ def main():
     connect(host=DB_URL)
     multiprocessing.Process(target=run_users_queue).start()
     loop = asyncio.get_event_loop() or asyncio.new_event_loop()
+    dp.loop = loop
     initialize_project(dp, dp.bot, loop=loop)
     dp.actions_storage = ActionsStorage()
     executor.start_polling(dp, skip_updates=True)
