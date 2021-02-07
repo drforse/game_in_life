@@ -29,7 +29,7 @@ class Item(GameInLifeDbBaseObject):
     @staticmethod
     def _resolve_field_to_db(name, value):
         if name == 'effects':
-            return [e.to_db for e in value]
+            return [e.to_db() for e in value]
         return value
 
     async def buy(self, buyer: 'Player', quantity: int = 1):

@@ -30,3 +30,8 @@ class ItemDoesNotExist(Exception):
 class NotEnoughItems(Exception):
     def __init__(self, txt: str = None):
         self.txt = txt
+
+
+class LearnedPerkNotFound(Exception):
+    def __init__(self, txt: str = None):
+        self.txt = txt

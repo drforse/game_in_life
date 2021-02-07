@@ -18,10 +18,9 @@ class Effect:
         self.min_characteristic_value = CHARACTERISTIC_VALUE_LIMITS['satiety']['min']
 
     async def apply(self, target):
-        def update():
+        async def update():
             setattr(target, self.target_characteristic, new_value)
-            setattr(target.model, self.target_characteristic, new_value)
-            target.model.save()
+            await target.save_to_db()
         for sec in range(self.duration):
             current_value = getattr(target.model, self.target_characteristic)
             change_value = self.strength / self.duration
@@ -29,17 +28,17 @@ class Effect:
                 new_value = current_value + change_value
                 if new_value > self.max_characteristic_value:
                     new_value = self.max_characteristic_value
-                    update()
+                    await update()
                     break
             elif self.type == 'decrease':
                 new_value = current_value - change_value
                 if new_value < self.max_characteristic_value:
                     new_value = self.max_characteristic_value
-                    update()
+                    await update()
                     break
             else:
                 raise EffectTypeNotKnown(self.type)
-            update()
+            await update()
             await asyncio.sleep(1)
 
     def to_db(self):

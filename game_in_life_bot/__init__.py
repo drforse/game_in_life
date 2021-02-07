@@ -18,13 +18,21 @@ def run_users_queue():
     Queue.run()
 
 
+def on_shutdown():
+    logging.info("Running on_shutdown...")
+    from .redis_models import Theft
+
+    for theft in Theft.query.execute():
+        theft.delete()
+
+
 def main():
     logging.basicConfig(level=logging.INFO)
     connect(host=DB_URL)
     multiprocessing.Process(target=run_users_queue).start()
     initialize_project(dp, dp.bot)
     dp.actions_storage = ActionsStorage()
-    executor.start_polling(dp, skip_updates=True)
+    executor.start_polling(dp, skip_updates=True, on_shutdown=on_shutdown)
 
 
 # TODO:

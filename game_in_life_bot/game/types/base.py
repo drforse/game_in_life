@@ -27,11 +27,12 @@ class GameInLifeDbBaseObject:
             for k, v in self.model.to_mongo().items():
                 setattr(self, k, self._resolve_field_from_db(k, v))
 
-    def update_from_db(self):
+    def update_from_db(self, model=None):
+        self.model = model or self.model
         if self.model:
             self.model = self.model.reload()
         else:
-            self.model = self.model_type.get(**{k: v for k, v in self._update_from_db_kwargs.items()})
+            self.model = self.model_type.get(**self._update_from_db_kwargs)
         for k, v in self.model.to_mongo().items():
             setattr(self, k, self._resolve_field_from_db(k, v))
         self.id = self.model.id

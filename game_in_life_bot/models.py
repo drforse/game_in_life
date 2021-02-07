@@ -5,7 +5,7 @@ import typing
 from mongoengine import *
 from bson.objectid import ObjectId
 
-from .config import GAME_SPEED, CHARACTERISTIC_VALUE_LIMITS
+from .config import GAME_SPEED, CHARACTERISTIC_VALUE_LIMITS, UNEMPLOYED_JOB_ID
 
 
 class MyDocument:
@@ -21,6 +21,23 @@ class MyDocument:
         queryset_ = cls.objects(**kwargs).order_by('-id')
         if queryset_:
             return queryset_[0]
+
+
+class JobModel(Document, MyDocument):
+    meta = {'collection': 'job'}
+    id = StringField(primary_key=True)
+    title = StringField(required=True)
+    limits = DictField(default={})  # {"user": {"age": [(10, 18), (69, 100)]}}
+
+    new_perks_by_job_level = DictField(required=True)
+    # {job_level: [ForeignKey(perk)]} to choose randomly from the list
+
+
+class PerkModel(Document, MyDocument):
+    meta = {'collection': 'perk'}
+    id = StringField(primary_key=True)
+    title = StringField(required=True)
+    limits = DictField(default={})  # {"user": {"job": [ForeignKey(job)], "age": [(10, 18), (69, 100)]}}
 
 
 class UserModel(Document, MyDocument):
@@ -41,6 +58,9 @@ class UserModel(Document, MyDocument):
                          min_value=CHARACTERISTIC_VALUE_LIMITS['satiety']['min'],
                          required=True)
     backpack = DictField(default={})
+    primary_job = StringField(default=UNEMPLOYED_JOB_ID)  # ForeignKey(job)
+    learned_jobs = ListField(default=[{"job": "unemployed", "xp": 100}])  # [{"job": ForeignKey(job), "xp": int}]
+    learned_perks = ListField(default=[{"perk": "theft", "xp": 100}])  # [{"perk": ForeignKey(perk), "xp": int}]
 
     def update_age(self, age: int = None):
         logging.info(f'update age of user {self.tg_id}')
@@ -178,4 +198,6 @@ __all__ = ['UserModel',
            'GroupModel',
            'SexGifsModel',
            'CumSexGifsModel',
-           'DefaultUserpicsModel']
+           'DefaultUserpicsModel',
+           'JobModel',
+           'PerkModel']

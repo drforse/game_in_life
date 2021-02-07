@@ -159,8 +159,7 @@ class Action:
             if not participant.alive:
                 continue
             participant.satiety -= self.used_satiety
-            participant.model.satiety = participant.satiety
-            participant.model.save()
+            await participant.save_to_db()
             if self.initiator.id == self.second_participant.id:
                 break
         self.finished = True

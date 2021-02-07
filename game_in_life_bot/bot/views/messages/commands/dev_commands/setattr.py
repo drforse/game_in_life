@@ -10,7 +10,7 @@ class SetAttr(DevCommandView):
     async def execute(m: Message):
         if not m.reply_to_message:
             return
-        args = m.text.split()[1:]
+        args = m.text.split(maxsplit=2)[1:]
         user_model = UserModel.get(tg_id=m.reply_to_message.from_user.id)
         if user_model:
             try:

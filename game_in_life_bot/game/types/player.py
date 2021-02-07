@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import math
 import random
 import typing
 import asyncio
@@ -8,14 +9,23 @@ import asyncio
 from bson.objectid import ObjectId
 from mongoengine.queryset.visitor import Q
 
+from .job import Job
+from .learned_job import LearnedJob
+from .learned_perk import LearnedPerk
+from .perk import Perks
 from ..actions.actions_factory import ActionsFactory
+from ..utils import get_level
+from ...config import MAX_LEVEL
 from ...models import *
 from .balance import Balance
 from .item import Item
 from ..exceptions import *
+from .base import GameInLifeDbBaseObject
+from ...senderman_roullette_api import exceptions as sexcs
 
 
-class Player:
+class Player(GameInLifeDbBaseObject):
+    model_type = UserModel
 
     cant_marry_reason_exaplanation = {'married': 'Вы уже в браке в этой стране',
                                       'partner_married': 'Вы не можете вступить в брак с тем, кто уже в браке',
@@ -35,12 +45,11 @@ class Player:
                                      'lover_married': 'Вы не можете встречаться с тем, кто состоит в браке',
                                      'lover_dating': 'Этот человек с кем-то уже встречается'}
 
-    gender_emoji_reference = {'male': '♂️', 'female': '♀️', 'transgender': '♂️♀️'}
+    gender_emoji_reference = {'male': '♂', 'female': '♀', 'transgender': '♂♀'}
 
     def __init__(self, model_id: ObjectId = None, tg_id: int = None, model: UserModel = None):
         self.id = model_id
         self.tg_id = tg_id
-        self.exists = False
         self.name = None
         self.gender = None
         self.photo_id = None
@@ -50,11 +59,17 @@ class Player:
         self.partners = None
         self.lovers = None
         self.childs = None
-        self.balance = Balance()
         self.satiety = None
         self.backpack = None
+        self.primary_job: Job = None
+        self.learned_jobs: typing.List[LearnedJob] = None
+        self.learned_perks: typing.List[LearnedPerk] = None
         self.model: UserModel = model
-        self.update_from_db(model)
+        if self.id:
+            super().__init__(model, id=model_id)
+        else:
+            super().__init__(model, tg_id=self.tg_id)
+        self.balance = Balance(self)
 
     async def create(self, name, gender, age, chats=(), parents=()) -> Player:
         model = UserModel(tg_id=self.tg_id, name=name, gender=gender, age=age,
@@ -63,28 +78,41 @@ class Player:
         self.update_from_db(model)
         return self
 
-    def update_from_db(self, model: UserModel = None):
-        if not model:
-            model = UserModel.get(id=self.id) if self.id else UserModel.get(tg_id=self.tg_id)
-        self.model = model
-        if not model:
-            self.exists = False
-            return
-        self.id = model.id
-        self.tg_id = model.tg_id
-        self.name = model.name
-        self.gender = model.gender
-        self.photo_id = model.photo_id
-        self.age = model.age
-        self.chats = model.chats
-        self.parents = model.parents
-        self.partners = model.partners
-        self.lovers = model.lovers
-        self.childs = model.childs
-        self.balance = Balance(self)
-        self.satiety = model.satiety
-        self.backpack = model.backpack
-        self.exists = True
+    @staticmethod
+    def _resolve_field_from_db(name, value):
+        if name == 'primary_job':
+            return Job(id=value)
+        if name == 'learned_jobs':
+            return [LearnedJob(**job) for job in value]
+        if name == 'learned_perks':
+            return [LearnedPerk(**perk) for perk in value]
+        return value
+
+    @staticmethod
+    def _resolve_field_to_db(name, value):
+        # print(name, value)
+        if name == 'primary_job':
+            # print(value.id)
+            return value.id
+        if name == 'learned_jobs':
+            return [job.to_db() for job in value]
+        if name == 'learned_perks':
+            return [perk.to_db() for perk in value]
+        return value
+
+    @property
+    def learned_perks_ids(self):
+        return [perk.perk.id for perk in self.learned_perks]
+
+    def get_learned_perk_by_id(self, id: str) -> LearnedPerk:
+        for perk in self.learned_perks:
+            if perk.perk.id == id:
+                return perk
+        raise LearnedPerkNotFound(id)
+
+    @property
+    def exists(self):
+        return bool(self.model)
 
     @property
     def alive(self):
@@ -100,6 +128,43 @@ class Player:
 
     async def leave_chat(self, chat_tg_id):
         self.model.update(pull__chats=chat_tg_id)
+
+    async def random_steal(self, from_player: Player):
+        stolen = {"items": {}, "money": 0}
+        perk_xp = self.get_learned_perk_by_id(Perks.THEFT).xp
+
+        non_empty_backpack = dict(filter(lambda i: i[1], from_player.backpack.items()))
+        if non_empty_backpack:
+            item = random.choice(list(non_empty_backpack.keys()))
+            item_quantity = from_player.backpack[item]
+            # print(f"{from_player.backpack=}")
+            # print(f"{item=}")
+            # print(f"{item_quantity=}")
+            # print(f"{get_level(perk_xp)=}")
+            # print(f"{MAX_LEVEL=}")
+            print(math.ceil(item_quantity * get_level(perk_xp) / MAX_LEVEL))
+            quantity_to_steal = random.randint(1, math.ceil(item_quantity * get_level(perk_xp)/MAX_LEVEL))
+            from_player.backpack[item] -= quantity_to_steal
+            self.backpack[item] = self.backpack.get(item, 0) + quantity_to_steal
+            stolen.update({"items": {item: quantity_to_steal}})
+
+        money_to_steal = random.randint(0, math.ceil(from_player.balance.main_currency_balance * get_level(perk_xp) / MAX_LEVEL))
+        if money_to_steal > from_player.balance.main_currency_balance / 2:
+            money_to_steal = from_player.balance.main_currency_balance / 2
+        stolen["money"] = money_to_steal
+        await from_player.save_to_db()
+        await self.save_to_db()
+        await from_player.balance.add_money_to_main_currency_balance(-money_to_steal)
+        await self.balance.add_money_to_main_currency_balance(+money_to_steal)
+        return stolen
+
+    async def up_perk(self, perk_id: str):
+        perk = self.get_learned_perk_by_id(Perks.THEFT)
+        old_level = get_level(perk.xp)
+        perk.xp += 250 / (10 + get_level(perk.xp))
+        if get_level(perk.xp) > old_level:
+            return "new_perk_level"
+        return "success"
 
     async def action(self, action: str, chat_id: int, partner: typing.Union[UserModel, Player, int],
                      delay: int = 300, custom_data: str = None) -> 'Action':
@@ -352,10 +417,107 @@ class Player:
             raise NotEnoughItems
         for i in range(quantity):
             self.backpack[item_id] -= 1
-            self.model.save()
+            await self.save_to_db()
             loop = asyncio.get_event_loop()
             for e in item.effects:
                 loop.create_task(e.apply(target))
+
+    async def get_job(self, job: Job):
+        self.primary_job = job
+        if job.id not in [j.job.id for j in self.learned_jobs]:
+            self.learned_jobs.append(LearnedJob(job=job.id, xp=0))
+            new_perk = random.choice(job.new_perks_by_job_level["0"])
+            self.learned_perks.append(LearnedPerk(perk=new_perk.id, xp=0))
+        await self.save_to_db()
+
+    async def format_info(self, chat_id: int = None, include_family: bool = False, hide_balance: bool = False):
+        if include_family and not chat_id:
+            raise ValueError("chat_id must be provided if include_family is True")
+        parent = Eva
+        second_parent = Adam
+
+        emojis = self.gender_emoji_reference
+        text = 'Имя: %s %s\nВозраст: %s\nРодители: ' % (self.name, emojis[self.gender], self.age)
+
+        parents = (parent, second_parent)
+        for num, p in enumerate(parents):
+            text += f'{p.name} {emojis[p.gender]}'
+            if not p.alive:
+                text += ' 🕯'
+            if num != len(parents) - 1:
+                text += ' | '
+            else:
+                text += '\n'
+
+        if include_family:
+            text += await self.format_family(chat_id)
+        if not hide_balance:
+            text += await self.format_balance()
+
+        text += 'Сытость: %s' % round(self.satiety)
+
+        return text
+
+    async def format_family(self, chat_id: int) -> str:
+        partner = None
+        lover = None
+        childs = []
+        if self.parents[0] != '0':
+            parent = Player(model_id=self.parents[0])
+        if self.parents[1] != '0':
+            second_parent = Player(model_id=self.parents[1])
+        if self.partners.get(str(chat_id)):
+            partner = Player(model_id=self.partners[str(chat_id)])
+        if self.lovers.get(str(chat_id)):
+            lover = Player(model_id=self.lovers[str(chat_id)])
+        if self.childs.get(str(chat_id)):
+            childs = [Player(model_id=child_id) for child_id in self.childs[str(chat_id)]]
+
+        emojis = self.gender_emoji_reference
+        text = ""
+        if partner:
+            if partner.gender == 'female':
+                s = 'Жена: %s'
+            elif partner.gender == 'male':
+                s = 'Муж: %s'
+            else:
+                s = 'Партнер: %s'
+            text += s % partner.name + '\n'
+
+        if lover:
+            if lover.gender == 'female':
+                s = 'Девушка: %s'
+            elif lover.gender == 'male':
+                s = 'Парень: %s'
+            else:
+                s = 'Встречается с: %s'
+            text += s % lover.name + '\n'
+
+        if childs:
+            text += 'Дети:\n'
+        for child in childs:
+            if not child.exists:
+                continue
+            text += '- %s %s' % (child.name,  emojis[child.gender])
+            if not child.alive:
+                text += ' 🕯'
+            text += '\n'
+
+        return text
+
+    async def format_balance(self):
+        text = ""
+        # pasyucoin_balance = self.balance.pasyucoin_currency_balance
+        try:
+            yulcoin_balance = await self.balance.yulcoin_currency_balance
+        except (sexcs.UserNotFound, sexcs.SendermanRoulleteApiException):
+            yulcoin_balance = None
+        text += 'Баланс💰:\n'
+        text += '   Кофеины (осн. вал.): ☕%s\n' % round(self.balance.main_currency_balance, 2)
+        if yulcoin_balance is not None:
+            text += '   Юлькоины: 🌯%s\n' % round(yulcoin_balance)
+
+        return text
 
 
 class Country:
