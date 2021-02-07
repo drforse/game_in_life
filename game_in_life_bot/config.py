@@ -2,6 +2,7 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import Dispatcher
 from aiogram import Bot
 import os
+import asyncio
 
 from bson import ObjectId
 
@@ -10,8 +11,9 @@ DB_URL = os.environ['game_in_life_db_url']
 SENDERMAN_SECURE_API_BOT_TOKEN = os.environ['senderman_secure_api_bot_token']
 
 storage = MemoryStorage()
-bot = Bot(API_TOKEN, parse_mode='html')
-dp = Dispatcher(bot, storage=storage)
+loop = asyncio.get_event_loop() or asyncio.new_event_loop()
+bot = Bot(API_TOKEN, parse_mode='html', loop=loop)
+dp = Dispatcher(bot, storage=storage, loop=loop)
 
 
 GAME_SPEED = 21600  # seconds == 1 age

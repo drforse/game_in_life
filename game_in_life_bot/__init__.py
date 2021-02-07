@@ -1,3 +1,5 @@
+import asyncio
+
 from mongoengine import connect
 from aiogram import executor
 import multiprocessing
@@ -30,7 +32,8 @@ def main():
     logging.basicConfig(level=logging.INFO)
     connect(host=DB_URL)
     multiprocessing.Process(target=run_users_queue).start()
-    initialize_project(dp, dp.bot)
+    loop = asyncio.get_event_loop() or asyncio.new_event_loop()
+    initialize_project(dp, dp.bot, loop=loop)
     dp.actions_storage = ActionsStorage()
     executor.start_polling(dp, skip_updates=True, on_shutdown=on_shutdown)
 
