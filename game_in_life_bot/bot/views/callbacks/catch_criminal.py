@@ -5,9 +5,11 @@ from aiogram_oop_framework.filters import filter_execute
 
 from aiogram_oop_framework.views import CallbackQueryView
 
+from ....game.cached_types import Theft
 from ....game.types import Player
 from ....game.types.job import Jobs
-from ....redis_models import Theft as TheftModel
+from ....game.types.perk import Perks
+from ....game.utils import get_level
 
 
 class CatchCriminal(CallbackQueryView):
@@ -23,37 +25,32 @@ class CatchCriminal(CallbackQueryView):
     @filter_execute(lambda c: c.data.startswith('catch_criminal theft'))
     async def catch_thief(cls, q: CallbackQuery):
         # TODO:
-        #   [] make policeman's arrest perk level affect arresting and grow
+        #   [] make policeman's arrest perk level affect arresting
         player = Player(tg_id=q.from_user.id)
         if player.primary_job.id != Jobs.POLICEMAN:
             await q.answer("Но... ты не полицейский...")
             return
 
         dt = q.data.split()
-        theft: TheftModel = TheftModel.query.filter(
-            criminal_id=int(dt[2]), victim_id=int(dt[3]), chat_id=q.message.chat.id
-        ).order_by("-created_at").first()
-        theft.success = False
-        theft.is_completed = True
-        theft.save()
+        theft: Theft = Theft.get_last_with_players_in_chat(int(dt[2]), int(dt[3]), q.message.chat.id)
 
-        criminal = Player(tg_id=theft.criminal_id)
-        victim = Player(tg_id=theft.victim_id)
-        fine = theft.stolen_money * 0.5
-        await criminal.balance.add_money_to_main_currency_balance(-(theft.stolen_money + fine))
-        await victim.balance.add_money_to_main_currency_balance(theft.stolen_money)
-        for item_id, quantity in theft.stolen_items.items():
-            criminal.backpack[item_id] -= quantity
-            victim.backpack[item_id] += quantity
-        await criminal.save_to_db()
-        await victim.save_to_db()
-
-        await player.balance.add_money_to_main_currency_balance(fine)
+        catch = theft.process_catch(player)
         await q.message.answer(
             f"Деньги ({theft.stolen_money}) и предметы возвращены законному владельцу.\n"
-            f"Вор оштрафован на {fine}.\n"
-            f"Полицейский получил вознаграждение в размере {fine}."
+            f"Вор оштрафован на {catch.fine}.\n"
+            f"Полицейский получил вознаграждение в размере {catch.catcher_reward}."
         )
+
+        result = await player.up_perk(perk_id=Perks.ARREST)
+        if not result == "new_perk_level":
+            return
+        perk = player.get_learned_perk_by_id(Perks.ARREST)
+        await q.bot.send_message(
+            player.tg_id,
+            f"Congrats! Your perk {Perks.THEFT} is at new level - {get_level(perk.xp)}!\n"
+            f"Новые преимущества:\n"
+            f"TODO")
+
         try:
             await q.message.delete()
         except:

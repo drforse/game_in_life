@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import enum
 import logging
 import math
 import random
 import typing
 import asyncio
+from dataclasses import dataclass
+from datetime import datetime
 
 from bson.objectid import ObjectId
 from mongoengine.queryset.visitor import Q
@@ -14,8 +17,10 @@ from .learned_job import LearnedJob
 from .learned_perk import LearnedPerk
 from .perk import Perks
 from ..actions.actions_factory import ActionsFactory
+from ..cached_types import Theft
 from ..utils import get_level
-from ...config import MAX_LEVEL
+from ...config import MAX_LEVEL, SECONDS_BEFORE_NEXT_CRIME
+from ...enum_helper import StringFlagEnum
 from ...models import *
 from .balance import Balance
 from .item import Item
@@ -129,7 +134,7 @@ class Player(GameInLifeDbBaseObject):
     async def leave_chat(self, chat_tg_id):
         self.model.update(pull__chats=chat_tg_id)
 
-    async def random_steal(self, from_player: Player):
+    async def random_steal(self, from_player: Player, chat_id: int) -> Theft:
         stolen = {"items": {}, "money": 0}
         perk_xp = self.get_learned_perk_by_id(Perks.THEFT).xp
 
@@ -142,7 +147,7 @@ class Player(GameInLifeDbBaseObject):
             # print(f"{item_quantity=}")
             # print(f"{get_level(perk_xp)=}")
             # print(f"{MAX_LEVEL=}")
-            print(math.ceil(item_quantity * get_level(perk_xp) / MAX_LEVEL))
+            # print(math.ceil(item_quantity * get_level(perk_xp) / MAX_LEVEL))
             quantity_to_steal = random.randint(1, math.ceil(item_quantity * get_level(perk_xp)/MAX_LEVEL))
             from_player.backpack[item] -= quantity_to_steal
             self.backpack[item] = self.backpack.get(item, 0) + quantity_to_steal
@@ -156,12 +161,20 @@ class Player(GameInLifeDbBaseObject):
         await self.save_to_db()
         await from_player.balance.add_money_to_main_currency_balance(-money_to_steal)
         await self.balance.add_money_to_main_currency_balance(+money_to_steal)
-        return stolen
+
+        theft = Theft(chat_id=chat_id,
+                      criminal_id=self.tg_id,
+                      victim_id=from_player.tg_id,
+                      stolen_money=stolen["money"],
+                      stolen_items=stolen["items"]).save_to_db()
+
+        return theft
 
     async def up_perk(self, perk_id: str):
-        perk = self.get_learned_perk_by_id(Perks.THEFT)
+        perk = self.get_learned_perk_by_id(perk_id)
         old_level = get_level(perk.xp)
         perk.xp += 250 / (10 + get_level(perk.xp))
+        await self.save_to_db()
         if get_level(perk.xp) > old_level:
             return "new_perk_level"
         return "success"
@@ -518,6 +531,32 @@ class Player(GameInLifeDbBaseObject):
             text += '   Юлькоины: 🌯%s\n' % round(yulcoin_balance)
 
         return text
+
+    async def get_crimes_status(self) -> CrimesStatus:
+        last_theft: Theft = Theft.get_last_from_player(self.tg_id)
+        if not last_theft:
+            return CrimesStatus(CrimesStatuses.FREE)
+        if not last_theft.is_completed:
+            return CrimesStatus(CrimesStatuses.IN_PROCESS)
+        left_time = SECONDS_BEFORE_NEXT_CRIME - (datetime.now() - last_theft.created_at).total_seconds()
+        if left_time > 0:
+            return CrimesStatus(CrimesStatuses.IN_PROCESS)
+
+
+@dataclass
+class CrimesStatus:
+    status: CrimesStatuses
+    left_time: int = 0
+
+    def __init__(self, status: CrimesStatuses, left_time: int = 0):
+        super().__init__(status=status, left_time=left_time)
+
+
+class CrimesStatuses(StringFlagEnum):
+    FREE: CrimesStatuses = enum.auto()
+    IN_PROCESS: CrimesStatuses = enum.auto()
+    HIDING: CrimesStatuses = enum.auto()
+    BUSY: CrimesStatuses = IN_PROCESS | HIDING
 
 
 class Country:
