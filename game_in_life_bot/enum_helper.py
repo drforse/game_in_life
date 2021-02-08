@@ -1,7 +1,7 @@
 import enum
 
 
-class StringFLagEnum(enum.Flag):
+class StringFlagEnum(enum.Flag):
     def __eq__(self, other):
         if isinstance(other, str):
             other = getattr(self, other.upper())
