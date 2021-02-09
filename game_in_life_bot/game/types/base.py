@@ -33,6 +33,8 @@ class GameInLifeDbBaseObject:
             self.model = self.model.reload()
         else:
             self.model = self.model_type.get(**self._update_from_db_kwargs)
+        if not self.model:
+            return
         for k, v in self.model.to_mongo().items():
             setattr(self, k, self._resolve_field_from_db(k, v))
         self.id = self.model.id
