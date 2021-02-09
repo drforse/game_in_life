@@ -1,4 +1,5 @@
 import typing
+import logging
 
 from aiogram import Bot
 from aiogram.utils import exceptions
@@ -31,6 +32,8 @@ async def get_all_chats(separate_kicked=False, bot: Bot = None) -> typing.Dict:
         try:
             await bot.send_chat_action(group.chat_tg_id, 'typing')
             result[group.chat_tg_id] = group
-        except (exceptions.BotKicked, exceptions.ChatNotFound):
+        except (exceptions.BotKicked, exceptions.ChatNotFound, exceptions.Unauthorized):
             result['kicked'][group.chat_tg_id] = group
+        except Exception as e:
+            logging.exception(e)
     return result
