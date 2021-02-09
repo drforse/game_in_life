@@ -8,6 +8,7 @@ from bson import ObjectId
 
 API_TOKEN = os.environ['game_in_life_bot_token']
 DB_URL = os.environ['game_in_life_db_url']
+REDIS_URL = os.environ['REDIS_URL']
 SENDERMAN_SECURE_API_BOT_TOKEN = os.environ['senderman_secure_api_bot_token']
 
 storage = MemoryStorage()

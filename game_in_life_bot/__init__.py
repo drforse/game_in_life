@@ -4,9 +4,11 @@ from mongoengine import connect
 from aiogram import executor
 import multiprocessing
 import logging
+import redis
+import rom
 
 from .bot.manage import initialize_project
-from .config import dp, DB_URL
+from .config import dp, DB_URL, REDIS_URL
 from .users_queue import Queue
 from .game.actions.storage import ActionsStorage
 
@@ -31,6 +33,7 @@ def on_shutdown():
 def main():
     logging.basicConfig(level=logging.INFO)
     connect(host=DB_URL)
+    rom.util.set_connection_settings(host=REDIS_URL)
     multiprocessing.Process(target=run_users_queue).start()
     loop = asyncio.get_event_loop() or asyncio.new_event_loop()
     initialize_project(dp, dp.bot, loop=loop)
