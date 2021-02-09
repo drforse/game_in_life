@@ -6,7 +6,7 @@ from .....views.base import UserCommandView
 from ......game.types import Player, Item, CrimesStatuses
 from ......game.types.perk import Perks
 from ......game.cached_types import Theft
-from ......game.utils import get_level, get_time_to_catch_criminal
+from ......game.utils import get_time_to_catch_criminal, get_success
 
 
 class Steal(UserCommandView):
@@ -40,7 +40,7 @@ class Steal(UserCommandView):
 
         second_user = m.reply_to_message.from_user
         second_player = Player(tg_id=second_user.id)
-        success = True  # get_success(player.get_learned_perk_by_id(Perks.THEFT).xp)
+        success = True  # get_success(player.get_learned_perk_by_id(Perks.THEFT).get_level())
 
         kb = InlineKeyboardMarkup()
         kb.add(InlineKeyboardButton("Позвать полицию", callback_data="call_police theft"))
@@ -63,7 +63,7 @@ class Steal(UserCommandView):
                 text += f", {item_len} {item.name}"
             msg = await m.answer(text, reply_markup=kb)
 
-        await asyncio.sleep(10)  # get_time_to_catch_criminal(player.get_learned_perk_by_id(Perks.THEFT).xp))
+        await asyncio.sleep(10)  # get_time_to_catch_criminal(player.get_learned_perk_by_id(Perks.THEFT).get_level()))
         try:
             await msg.delete()
         except:
@@ -81,7 +81,7 @@ class Steal(UserCommandView):
         perk = player.get_learned_perk_by_id(Perks.THEFT)
         await m.bot.send_message(
             player.tg_id,
-            f"Congrats! Your perk {Perks.THEFT} is at new level - {get_level(perk.xp)}!\n"
+            f"Congrats! Your perk {Perks.THEFT} is at new level - {perk.get_level()}!\n"
             f"Новые преимущества:\n"
-            f"Время на поимку после воровства теперь: {get_time_to_catch_criminal(perk.xp)} сек.")
+            f"Время на поимку после воровства теперь: {get_time_to_catch_criminal(perk.get_level())} сек.")
 

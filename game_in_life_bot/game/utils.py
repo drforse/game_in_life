@@ -1,8 +1,6 @@
-import math
 import random
 
-from game_in_life_bot.config import XP_PER_LEVEL, MAX_LEVEL, MIN_SECONDS_TO_CATCH_CRIMINAL, \
-    SECONDS_TO_CATCH_CRIMINAL_MULTIPLIER
+from game_in_life_bot.config import MAX_LEVEL, MIN_SECONDS_TO_CATCH_CRIMINAL, SECONDS_TO_CATCH_CRIMINAL_MULTIPLIER
 
 
 def pairwise(iterable):
@@ -11,16 +9,11 @@ def pairwise(iterable):
     return zip(a, a)
 
 
-def get_success(perk_xp: int):
-    level = get_level(perk_xp)
-    return random.randint(level, MAX_LEVEL) == level
+def get_success(perk_level: int):
+    return random.randint(perk_level, MAX_LEVEL) == perk_level
 
 
-def get_level(xp: int):
-    return math.floor(xp / XP_PER_LEVEL)
-
-
-def get_time_to_catch_criminal(perk_xp: int) -> int:
+def get_time_to_catch_criminal(perk_level: int) -> int:
     return max([MIN_SECONDS_TO_CATCH_CRIMINAL,
-                MAX_LEVEL / get_level(perk_xp)
+                MAX_LEVEL / perk_level
                 * SECONDS_TO_CATCH_CRIMINAL_MULTIPLIER])

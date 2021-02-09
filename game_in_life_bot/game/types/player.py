@@ -17,7 +17,6 @@ from .learned_job import LearnedJob
 from .learned_perk import LearnedPerk
 from .perk import Perks
 from ..actions.actions_factory import ActionsFactory
-from ..utils import get_level
 from ...config import MAX_LEVEL, SECONDS_BEFORE_NEXT_CRIME
 from ...enum_helper import StringFlagEnum
 from ...models import *
@@ -137,7 +136,7 @@ class Player(GameInLifeDbBaseObject):
         from ..cached_types import Theft
 
         stolen = {"items": {}, "money": 0}
-        perk_xp = self.get_learned_perk_by_id(Perks.THEFT).xp
+        perk = self.get_learned_perk_by_id(Perks.THEFT)
 
         non_empty_backpack = dict(filter(lambda i: i[1], from_player.backpack.items()))
         if non_empty_backpack:
@@ -149,12 +148,14 @@ class Player(GameInLifeDbBaseObject):
             # print(f"{get_level(perk_xp)=}")
             # print(f"{MAX_LEVEL=}")
             # print(math.ceil(item_quantity * get_level(perk_xp) / MAX_LEVEL))
-            quantity_to_steal = random.randint(1, math.ceil(item_quantity * get_level(perk_xp)/MAX_LEVEL))
+            quantity_to_steal = random.randint(
+                1, math.ceil(item_quantity * perk.get_level() / MAX_LEVEL))
             from_player.backpack[item] -= quantity_to_steal
             self.backpack[item] = self.backpack.get(item, 0) + quantity_to_steal
             stolen.update({"items": {item: quantity_to_steal}})
 
-        money_to_steal = random.randint(0, math.ceil(from_player.balance.main_currency_balance * get_level(perk_xp) / MAX_LEVEL))
+        money_to_steal = random.randint(
+            0, math.ceil(from_player.balance.main_currency_balance * perk.get_level() / MAX_LEVEL))
         if money_to_steal > from_player.balance.main_currency_balance / 2:
             money_to_steal = from_player.balance.main_currency_balance / 2
         stolen["money"] = money_to_steal
@@ -173,10 +174,10 @@ class Player(GameInLifeDbBaseObject):
 
     async def up_perk(self, perk_id: str):
         perk = self.get_learned_perk_by_id(perk_id)
-        old_level = get_level(perk.xp)
-        perk.xp += 250 / (10 + get_level(perk.xp))
+        old_level = perk.get_level()
+        perk.xp += 250 / (10 + perk.get_level())
         await self.save_to_db()
-        if get_level(perk.xp) > old_level:
+        if perk.get_level() > old_level:
             return "new_perk_level"
         return "success"
 

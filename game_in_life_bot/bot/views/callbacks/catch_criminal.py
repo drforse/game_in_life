@@ -9,7 +9,6 @@ from ....game.cached_types import Theft
 from ....game.types import Player
 from ....game.types.job import Jobs
 from ....game.types.perk import Perks
-from ....game.utils import get_level
 
 
 class CatchCriminal(CallbackQueryView):
@@ -47,7 +46,7 @@ class CatchCriminal(CallbackQueryView):
         perk = player.get_learned_perk_by_id(Perks.ARREST)
         await q.bot.send_message(
             player.tg_id,
-            f"Congrats! Your perk {Perks.THEFT} is at new level - {get_level(perk.xp)}!\n"
+            f"Congrats! Your perk {Perks.THEFT} is at new level - {perk.get_level()}!\n"
             f"Новые преимущества:\n"
             f"TODO")
 

@@ -31,7 +31,15 @@ SECONDS_BEFORE_NEXT_CRIME = 1
 
 MIN_SECONDS_TO_CATCH_CRIMINAL = 10
 SECONDS_TO_CATCH_CRIMINAL_MULTIPLIER = 3
-THEFT_CATCHER_REWARD_MULTIPLIER = 0.5
+
+# multiplies stolen money by MINIMUM_THEFT_CATCHER_REWARD_MULTIPLIER to get minimum reward,
+# and if result > calculated reward, than uses it insteadof calculated reward
+MINIMUM_THEFT_CATCHER_REWARD_MULTIPLIER = 0.5
+
+# multiplies reward by THEFT_CATCHER_REWARD_MULTIPLIER to finish it's calculation
+# (doesn't apply on reward gotten by stolen_money * MINIMUM_THEFT_CATCHER_REWARD_MULTIPLIER)
+THEFT_CATCHER_REWARD_MULTIPLIER = 1.5
+
 THEFT_FINE_MULTIPLIER = 0.5
 
 CURRENCY_PRICES = {'pasyucoin': 0.5,

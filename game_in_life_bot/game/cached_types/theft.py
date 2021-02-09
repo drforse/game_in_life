@@ -2,12 +2,11 @@ from dataclasses import dataclass
 from typing import Optional
 from datetime import datetime
 
-from bson import ObjectId
 from pydantic import Field, PrivateAttr
 
 from .base import GameInLifeCachedBaseObject
 from ..types import Player
-from ...config import THEFT_CATCHER_REWARD_MULTIPLIER, THEFT_FINE_MULTIPLIER
+from ...config import THEFT_FINE_MULTIPLIER, MAX_LEVEL, THEFT_CATCHER_REWARD_MULTIPLIER, MINIMUM_THEFT_CATCHER_REWARD_MULTIPLIER
 from ...redis_models import Theft as TheftModel
 
 
@@ -67,13 +66,21 @@ class Theft(GameInLifeCachedBaseObject):
         self.is_completed = True
         self.save_to_db()
 
+    def get_catcher_reward(self, catcher: Player) -> float:
+        from game_in_life_bot.game.types.perk import Perks
+
+        perk = catcher.get_learned_perk_by_id(Perks.ARREST)
+        min_reward = self.stolen_money * MINIMUM_THEFT_CATCHER_REWARD_MULTIPLIER
+        reward = self.stolen_money * (MAX_LEVEL / perk.get_level())
+        return max(min_reward, reward)
+
     async def process_catch(self, catcher: Player) -> 'Catch':
         self.complete(set_success=False)
 
         criminal = Player(tg_id=self.criminal_id)
         victim = Player(tg_id=self.victim_id)
         fine = self.stolen_money * THEFT_FINE_MULTIPLIER
-        catcher_reward = self.stolen_money * THEFT_CATCHER_REWARD_MULTIPLIER
+        catcher_reward = self.get_catcher_reward()
         await criminal.balance.add_money_to_main_currency_balance(-(self.stolen_money + fine))
         await victim.balance.add_money_to_main_currency_balance(self.stolen_money)
         for item_id, quantity in self.stolen_items.items():
