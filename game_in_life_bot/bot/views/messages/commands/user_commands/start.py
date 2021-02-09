@@ -4,7 +4,6 @@ from ......bot.aiogram_fsm import CreateCountryForm
 from ......bot.views.base import UserCommandView
 from ......bot.game import Game
 from ......game.types.player import Player, Country
-from .me import Me
 
 
 class Start(UserCommandView):
@@ -50,4 +49,8 @@ class Start(UserCommandView):
             await Game.process_rebornig_user(m)
             return
 
-        await Me.execute_in_private(m, player)
+        text = await player.format_info()
+        if player.photo_id:
+            await m.answer_photo(player.photo_id, text)
+        else:
+            await m.answer(text)
