@@ -34,7 +34,7 @@ class CatchCriminal(CallbackQueryView):
         dt = q.data.split()
         theft: Theft = Theft.get_last_with_players_in_chat(int(dt[2]), int(dt[3]), q.message.chat.id)
 
-        catch = theft.process_catch(player)
+        catch = await theft.process_catch(player)
         await q.message.answer(
             f"Деньги ({theft.stolen_money}) и предметы возвращены законному владельцу.\n"
             f"Вор оштрафован на {catch.fine}.\n"

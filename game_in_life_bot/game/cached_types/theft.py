@@ -67,7 +67,7 @@ class Theft(GameInLifeCachedBaseObject):
         self.is_completed = True
         self.save_to_db()
 
-    def process_catch(self, catcher: Player) -> 'Catch':
+    async def process_catch(self, catcher: Player) -> 'Catch':
         self.complete(set_success=False)
 
         criminal = Player(tg_id=self.criminal_id)

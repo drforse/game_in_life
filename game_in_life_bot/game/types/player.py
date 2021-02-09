@@ -17,7 +17,6 @@ from .learned_job import LearnedJob
 from .learned_perk import LearnedPerk
 from .perk import Perks
 from ..actions.actions_factory import ActionsFactory
-from ..cached_types import Theft
 from ..utils import get_level
 from ...config import MAX_LEVEL, SECONDS_BEFORE_NEXT_CRIME
 from ...enum_helper import StringFlagEnum
@@ -134,7 +133,9 @@ class Player(GameInLifeDbBaseObject):
     async def leave_chat(self, chat_tg_id):
         self.model.update(pull__chats=chat_tg_id)
 
-    async def random_steal(self, from_player: Player, chat_id: int) -> Theft:
+    async def random_steal(self, from_player: Player, chat_id: int) -> 'Theft':
+        from ..cached_types import Theft
+
         stolen = {"items": {}, "money": 0}
         perk_xp = self.get_learned_perk_by_id(Perks.THEFT).xp
 
@@ -533,6 +534,7 @@ class Player(GameInLifeDbBaseObject):
         return text
 
     async def get_crimes_status(self) -> CrimesStatus:
+        from ..cached_types import Theft
         last_theft: Theft = Theft.get_last_from_player(self.tg_id)
         if not last_theft:
             return CrimesStatus(CrimesStatuses.FREE)
