@@ -12,7 +12,7 @@ idna==2.9
 mongoengine==0.20.0
 multidict==4.7.5
 pycryptodome==3.9.7
-pydantic==1.7.3
+pydantic==1.7.4
 pymongo==3.10.1
 pytz==2020.1
 redis==3.5.3
